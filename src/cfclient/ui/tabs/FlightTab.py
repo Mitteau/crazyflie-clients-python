@@ -69,6 +69,8 @@ class FlightTab(Tab, flight_tab_class):
     _rp_trim_updated_signal = pyqtSignal(float, float)
     _emergency_stop_updated_signal = pyqtSignal(bool)
     _assisted_control_updated_signal = pyqtSignal(bool)
+    _poshold_input_updated_signal = pyqtSignal(float)   ####
+    _althold_input_updated_signal = pyqtSignal(float)
     _heighthold_input_updated_signal = pyqtSignal(float, float, float, float)
     _hover_input_updated_signal = pyqtSignal(float, float, float, float)
 
@@ -80,6 +82,7 @@ class FlightTab(Tab, flight_tab_class):
     disconnectedSignal = pyqtSignal(str)
 
     _limiting_updated = pyqtSignal(bool, bool, bool)
+    _all_sound = False
 
     def __init__(self, tabWidget, helper, *args):
         super(FlightTab, self).__init__(*args)
@@ -108,6 +111,10 @@ class FlightTab(Tab, flight_tab_class):
         self.helper.inputDeviceReader.emergency_stop_updated.add_callback(
             self._emergency_stop_updated_signal.emit)
 
+        self.helper.inputDeviceReader.althold_input_updated.add_callback(
+            self._althold_input_updated_signal.emit)
+        self._althold_input_updated_signal.connect(
+            self._althold_input_updated)
         self.helper.inputDeviceReader.heighthold_input_updated.add_callback(
             self._heighthold_input_updated_signal.emit)
         self._heighthold_input_updated_signal.connect(
@@ -172,6 +179,9 @@ class FlightTab(Tab, flight_tab_class):
             self.helper.cf.param.set_value("ring.headlightEnable",
                                            str(enabled)))
 
+        self._sound_all.clicked.connect(
+            lambda enabled: self.set_all_sound(enabled))
+
         self.helper.cf.param.add_update_callback(
             group="flightmode", name="ratepid",
             cb=(lambda name, checked:
@@ -187,6 +197,7 @@ class FlightTab(Tab, flight_tab_class):
                 self._led_ring_headlight.setChecked(eval(checked))))
 
         self._ledring_nbr_effects = 0
+        self._sound_nbr_effects = 0
 
         self.helper.cf.param.add_update_callback(
             group="ring",
@@ -194,11 +205,13 @@ class FlightTab(Tab, flight_tab_class):
             cb=self._ring_effect_updated)
 
         self.helper.cf.param.add_update_callback(
+            group="sound",
+            name="effect",
+            cb=self._sound_effect_updated)
+
+        self.helper.cf.param.add_update_callback(
             group="imu_sensors",
             cb=self._set_available_sensors)
-
-        self.helper.cf.param.all_updated.add_callback(
-            self._ring_populate_dropdown)
 
         self.logBaro = None
         self.logAltHold = None
@@ -210,12 +223,11 @@ class FlightTab(Tab, flight_tab_class):
         self.targetCalPitch.setValue(Config().get("trim_pitch"))
         self.targetCalRoll.setValue(Config().get("trim_roll"))
 
-        self.helper.inputDeviceReader.alt1_updated.add_callback(
-            self.alt1_updated)
-        self.helper.inputDeviceReader.alt2_updated.add_callback(
-            self.alt2_updated)
         self._tf_state = 0
         self._ring_effect = 0
+        self._soundeffect = 0
+        self.concted = False
+        self.assisted = False
 
         # Connect callbacks for input device limiting of rpöö/pitch/yaw/thust
         self.helper.inputDeviceReader.limiting_updated.add_callback(
@@ -228,6 +240,21 @@ class FlightTab(Tab, flight_tab_class):
         else:
             self.clientXModeCheckbox.setEnabled(False)
             self.clientXModeCheckbox.setChecked(False)
+
+        self.helper.cf.param.all_updated.add_callback(
+            self._sound_populate_dropdown)
+
+        self.helper.cf.param.all_updated.add_callback(
+            self._ring_populate_dropdown)
+
+    def set_all_sound(self, value):
+        self._all_sound = value
+        self.helper.cf.param.set_value("sound.effect", str(0))
+        self._soundeffect = 0
+        if value :
+            self._sound_effect.setEnabled(True)
+        else :
+            self._sound_effect.setEnabled(False)
 
     def _set_limiting_enabled(self, rp_limiting_enabled,
                               yaw_limiting_enabled,
@@ -272,32 +299,43 @@ class FlightTab(Tab, flight_tab_class):
             self.actualHeight.setText(("%.2f" % estimated_z))
             self.ai.setBaro(estimated_z, self.is_visible())
 
+    def _althold_input_updated(self, height):
+        if (self.isVisible() and
+                (self.helper.inputDeviceReader.get_assisted_control() ==
+                 self.helper.inputDeviceReader.ASSISTED_CONTROL_ALTHOLD )):
+            self.targetHeight.setText(("%.1f m" % height))
+            self.ai.setHover(height, self.is_visible())
+        else: self.targetHeight.setText("Not Set")
+
     def _heighthold_input_updated(self, roll, pitch, yaw, height):
         if (self.isVisible() and
                 (self.helper.inputDeviceReader.get_assisted_control() ==
-                 self.helper.inputDeviceReader.ASSISTED_CONTROL_HEIGHTHOLD)):
-            self.targetRoll.setText(("%0.2f deg" % roll))
-            self.targetPitch.setText(("%0.2f deg" % pitch))
-            self.targetYaw.setText(("%0.2f deg/s" % yaw))
-            self.targetHeight.setText(("%.2f m" % height))
+                 self.helper.inputDeviceReader.ASSISTED_CONTROL_HEIGHTHOLD )):
+            self.targetRoll.setText(("%0.0f deg" % roll))
+            self.targetPitch.setText(("%0.0f deg" % pitch))
+            self.targetYaw.setText(("%0.0f deg/s" % yaw))
+            self.targetHeight.setText(("%.1f m" % height))
             self.ai.setHover(height, self.is_visible())
+        else: self.targetHeight.setText("Not Set")
 
     def _hover_input_updated(self, vx, vy, yaw, height):
         if (self.isVisible() and
                 (self.helper.inputDeviceReader.get_assisted_control() ==
-                 self.helper.inputDeviceReader.ASSISTED_CONTROL_HOVER)):
-            self.targetRoll.setText(("%0.2f m/s" % vy))
-            self.targetPitch.setText(("%0.2f m/s" % vx))
-            self.targetYaw.setText(("%0.2f deg/s" % yaw))
-            self.targetHeight.setText(("%.2f m" % height))
+                 self.helper.inputDeviceReader.ASSISTED_CONTROL_HOVER\
+                 or self.helper.inputDeviceReader.get_assisted_control() ==
+                 self.helper.inputDeviceReader.ASSISTED_CONTROL_ALTHOLD)):
+            self.targetRoll.setText(("%0.0f m/s" % vy))
+            self.targetPitch.setText(("%0.0f m/s" % vx))
+            self.targetYaw.setText(("%0.0f deg/s" % yaw))
+            self.targetHeight.setText(("%.1f m" % height))
             self.ai.setHover(height, self.is_visible())
 
     def _imu_data_received(self, timestamp, data, logconf):
         if self.isVisible():
-            self.actualRoll.setText(("%.2f" % data["stabilizer.roll"]))
-            self.actualPitch.setText(("%.2f" % data["stabilizer.pitch"]))
-            self.actualYaw.setText(("%.2f" % data["stabilizer.yaw"]))
-            self.actualThrust.setText("%.2f%%" %
+            self.actualRoll.setText(("%.1f" % data["stabilizer.roll"]))
+            self.actualPitch.setText(("%.1f" % data["stabilizer.pitch"]))
+            self.actualYaw.setText(("%.1f" % data["stabilizer.yaw"]))
+            self.actualThrust.setText("%.1f%%" %
                                       self.thrustToPercentage(
                                           data["stabilizer.thrust"]))
 
@@ -305,6 +343,7 @@ class FlightTab(Tab, flight_tab_class):
                                  data["stabilizer.pitch"], self.is_visible())
 
     def connected(self, linkURI):
+        self.concted = True
         # IMU & THRUST
         lg = LogConfig("Stabilizer", Config().get("ui_update_period"))
         lg.add_variable("stabilizer.roll", "float")
@@ -340,7 +379,10 @@ class FlightTab(Tab, flight_tab_class):
             logger.warning(str(e))
 
         self._populate_assisted_mode_dropdown()
-
+        self.targetHeight.setEnabled(True)
+        self.targetHeight.setText("Not Set")
+        self.helper.cf.param.set_value("flightmode.althold", "0")
+ 
     def _set_available_sensors(self, name, available):
         logger.info("[%s]: %s", name, available)
         available = eval(available)
@@ -365,6 +407,7 @@ class FlightTab(Tab, flight_tab_class):
                 logger.warning(str(e))
 
     def disconnected(self, linkURI):
+        self.concted = False
         self.ai.setRollPitch(0, 0)
         self.actualM1.setValue(0)
         self.actualM2.setValue(0)
@@ -375,7 +418,7 @@ class FlightTab(Tab, flight_tab_class):
         self.actualYaw.setText("")
         self.actualThrust.setText("")
         self.actualHeight.setText("")
-        self.targetHeight.setText("Not Set")
+        self.targetHeight.setText("")
         self.ai.setHover(0, self.is_visible())
         self.targetHeight.setEnabled(False)
         self.actualHeight.setEnabled(False)
@@ -383,7 +426,24 @@ class FlightTab(Tab, flight_tab_class):
         self.logBaro = None
         self.logAltHold = None
         self._led_ring_effect.setEnabled(False)
-        self._led_ring_effect.clear()
+        self._sound_effect.clear()
+
+        self._led_ring_headlight.setChecked(False)
+        self._led_ring_headlight.setEnabled(False)
+
+        self._sound_effect.setEnabled(False)
+        self._sound_effect.clear()
+
+        self._all_sound = False
+        self._sound_all.setChecked(False)
+        self._sound_all.setEnabled(False)
+
+        try:
+            self._sound_effect.currentIndexChanged.disconnect(
+                self._sound_effect_changed)
+        except TypeError:
+            # Signal was not connected
+            pass
         try:
             self._led_ring_effect.currentIndexChanged.disconnect(
                 self._ring_effect_changed)
@@ -447,10 +507,10 @@ class FlightTab(Tab, flight_tab_class):
         self.targetCalPitch.setValue(pitchCal)
 
     def updateInputControl(self, roll, pitch, yaw, thrust):
-        self.targetRoll.setText(("%0.2f deg" % roll))
-        self.targetPitch.setText(("%0.2f deg" % pitch))
-        self.targetYaw.setText(("%0.2f deg/s" % yaw))
-        self.targetThrust.setText(("%0.2f %%" %
+        self.targetRoll.setText(("%0.0f deg" % roll))
+        self.targetPitch.setText(("%0.0f deg" % pitch))
+        self.targetYaw.setText(("%0.0f deg/s" % yaw))
+        self.targetThrust.setText(("%0.0f %%" %
                                    self.thrustToPercentage(thrust)))
         self.thrustProgress.setValue(thrust)
 
@@ -524,20 +584,17 @@ class FlightTab(Tab, flight_tab_class):
         Config().set("assistedControl", mode)
 
     def _assisted_control_updated(self, enabled):
-        if self.helper.inputDeviceReader.get_assisted_control() == \
-                JoystickReader.ASSISTED_CONTROL_POSHOLD:
-            self.targetThrust.setEnabled(not enabled)
-            self.targetRoll.setEnabled(not enabled)
-            self.targetPitch.setEnabled(not enabled)
-        elif ((self.helper.inputDeviceReader.get_assisted_control() ==
-                JoystickReader.ASSISTED_CONTROL_HEIGHTHOLD) or
-                (self.helper.inputDeviceReader.get_assisted_control() ==
-                 JoystickReader.ASSISTED_CONTROL_HOVER)):
-            self.targetThrust.setEnabled(not enabled)
-            self.targetHeight.setEnabled(enabled)
-        else:
-            self.helper.cf.param.set_value("flightmode.althold", str(enabled))
-
+        if enabled and self.concted :
+            if self.assisted: self.assisted = False
+            else: self.assisted = True
+            if not self.assisted: self.targetHeight.setText("Not Set")
+            self.thrustProgress.setEnabled(not self.assisted)
+            self.targetThrust.setEnabled(not self.assisted)
+            self.targetRoll.setEnabled(not self.assisted)
+            self.targetPitch.setEnabled(not self.assisted)
+            self.targetYaw.setEnabled(not self.assisted)
+            self.helper.cf.param.set_value("flightmode.althold", str(self.assisted))
+                
     @pyqtSlot(bool)
     def changeXmode(self, checked):
         self.helper.cf.commander.set_client_xmode(checked)
@@ -551,8 +608,99 @@ class FlightTab(Tab, flight_tab_class):
                                            str(new_index))
 
     def alt2_updated(self, state):
-        self.helper.cf.param.set_value("ring.headlightEnable", str(state))
+        if state :
+            if self.helper.cf.param.values["ring"]["headlightEnable"] == "1" :
+                self.helper.cf.param.set_value("ring.headlightEnable", str(0))
+            else :
+                self.helper.cf.param.set_value("ring.headlightEnable", str(1))
 
+    def alt3_updated(self, state):
+        if self._all_sound:
+           if state:
+            new_index = (self._soundeffect+1) % (self._sound_nbr_effects+1)
+            logger.info("index lesonsds ancien {}, nouveau {}".format(self._soundeffect,new_index))
+            self.helper.cf.param.set_value("sound.effect", str(new_index))
+            self._soundeffect = new_index
+        else:
+           if state:
+             self.helper.cf.param.set_value("sound.effect", str(13))
+           else:
+             self.helper.cf.param.set_value("sound.effect", str(0))
+
+    def _sound_populate_dropdown(self):
+        try:
+            nbr = int(self.helper.cf.param.values["sound"]["neffect"])
+            current = int(self.helper.cf.param.values["sound"]["effect"])
+        except KeyError:
+            return
+
+        # Used only in alt3_updated function
+        self._soundeffect = current
+        self._sound_nbr_effects = nbr
+
+        hardcoded_names = {0: "Off",
+                           1: "Factory_test",
+                           2: "Usb_connect",
+                           3: "Usb_disconnec",
+                           4: "Chg_done",
+                           5: "Low battery",
+                           6: "Startup",
+                           7: "Calibrated",
+                           8: "Range slow",
+                           9: "Range fast",
+                           10: "Starwars",
+                           11: "Valkiries",
+                           12: "By-pass",
+                           13: "Siren",
+                           14: "Tilt"}
+
+#        hardcoded_names = {0: "Éteint",
+#                           1: "Essai d'usine",
+#                           2: "Avertissement de connexion USB",
+#                           3: "Avertissement de déconnexion USB",
+#                           4: "Changement effectué",
+#                           5: "Niveau bas de batterie",
+#                           6: "Démarrage",
+#                           7: "Calibration terminée",
+#                           8: "Lent",
+#                           9: "Rapide",
+#                           10: "Guerre des étoiles",
+#                           11: "Walkiries",
+#                           12: "Court-circuit",
+#                           13: "Sirène",
+#                           14: "Inclinaison"}
+
+        for i in range(nbr + 1):
+            name = "{}: ".format(i)
+            if i in hardcoded_names:
+                name += hardcoded_names[i]
+            else:
+                name += "N/A"
+            self._sound_effect.addItem(name, i)
+
+        self._sound_effect.currentIndexChanged.connect(
+            self._sound_effect_changed)
+
+        self._sound_effect.setCurrentIndex(0)
+        if self.helper.cf.mem.ow_search(vid=0xBC, pid=0x04):
+            if self._all_sound : self._sound_effect.setEnabled(True)
+            self._sound_all.setEnabled(True)
+            self.helper.inputDeviceReader.alt3_updated.add_callback(
+                self.alt3_updated)
+
+    def _sound_effect_changed(self, index):
+#        if self._all_sound : self._sound_effect.setCurrentIndex(index)
+#        el
+        self._sound_effect.setCurrentIndex(int(index))
+        if index > -1 :
+            i = self._sound_effect.itemData(index)
+            if i != int(self.helper.cf.param.values["sound"]["effect"]):
+                self.helper.cf.param.set_value("sound.effect", str(i))
+
+    def _sound_effect_updated(self, name, value):
+        if self.helper.cf.param.is_updated:
+            self._sound_effect.setCurrentIndex(int(value))
+ 
     def _ring_populate_dropdown(self):
         try:
             nbr = int(self.helper.cf.param.values["ring"]["neffect"])
@@ -590,9 +738,14 @@ class FlightTab(Tab, flight_tab_class):
         self._led_ring_effect.currentIndexChanged.connect(
             self._ring_effect_changed)
 
-        self._led_ring_effect.setCurrentIndex(current)
+        self._led_ring_effect.setCurrentIndex(0)
         if self.helper.cf.mem.ow_search(vid=0xBC, pid=0x01):
             self._led_ring_effect.setEnabled(True)
+            self.helper.cf.param.set_value("ring.headlightEnable", str(0))
+            self.helper.inputDeviceReader.alt1_updated.add_callback(
+                self.alt1_updated)
+            self.helper.inputDeviceReader.alt2_updated.add_callback(
+                self.alt2_updated)
             self._led_ring_headlight.setEnabled(True)
 
     def _ring_effect_changed(self, index):
@@ -614,14 +767,16 @@ class FlightTab(Tab, flight_tab_class):
         self._assist_mode_combo.addItem("Hover", 3)
         heightHoldPossible = False
         hoverPossible = False
-
+#### pas de cas poshold
+        self._assist_mode_combo.model().item(1).setEnabled(False)
+        
         if self.helper.cf.mem.ow_search(vid=0xBC, pid=0x09):
             heightHoldPossible = True
 
         if self.helper.cf.mem.ow_search(vid=0xBC, pid=0x0A):
             heightHoldPossible = True
             hoverPossible = True
-
+        
         if not heightHoldPossible:
             self._assist_mode_combo.model().item(2).setEnabled(False)
         else:

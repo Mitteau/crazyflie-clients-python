@@ -28,11 +28,14 @@ The main file for the Crazyflie control application.
 """
 import logging
 import sys
+import re
 
 import cfclient
 import cfclient.ui.tabs
 import cfclient.ui.toolboxes
 import cflib.crtp
+import cfclient.gui
+
 from cfclient.ui.dialogs.about import AboutDialog
 from cfclient.ui.dialogs.bootloader import BootloaderDialog
 from cfclient.utils.config import Config
@@ -46,17 +49,22 @@ from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.mem import MemoryElement
 from PyQt5 import QtWidgets
 from PyQt5 import uic
+from PyQt5 import QtGui
+from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import QDir
 from PyQt5.QtCore import QThread
 from PyQt5.QtCore import QUrl
+####################from PyQt5.QtGui import QStringRef
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtWidgets import QActionGroup
-from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QMenu
 from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QPushButton
+from PyQt5.QtGui import QDesktopServices
+from PyQt5.QtGui import QIcon
 
 from .dialogs.cf1config import Cf1ConfigDialog
 from .dialogs.cf2config import Cf2ConfigDialog
@@ -111,8 +119,36 @@ def progressbar_stylesheet(color):
         }
     """
 
+class MonDialog(object):
+    def setupUi(self, Dialog, datas, sender):
+        self.datas, self.sender = datas,  sender
+        Dialog.setWindowModality(QtCore.Qt.WindowModal)
+        Dialog.setMinimumWidth(0)
+        ####Dialog.resize(150, 80)
+        self.gridLayout = QtGui.QGridLayout(Dialog)
+        self.verticalLayout = QtGui.QVBoxLayout()
+        self.label = QtGui.QLabel(Dialog)
+        self.verticalLayout.addWidget(self.label)
+        self.button = QtGui.QToolButton(Dialog)
+        self.button.setText("Back")
+        self.verticalLayout.addWidget(self.button)
+        self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
+        self.button.clicked.connect(Dialog.accept)
+        self.process()
+
+    def process(self):
+####        chain = " ".join([d for d in self.datas])
+####        chain = "<tiny>"+self.datas+"</tiny>"
+        chain = self.datas
+        self.label.setText(chain)
 
 class MainUI(QtWidgets.QMainWindow, main_window_class):
+    address0 = 0xE7E7E7E7E7
+    URI_0 = "radio://0/80/250K/"
+    add = 0
+    _selected_interface = ""
+    found = False
+
     connectionLostSignal = pyqtSignal(str, str)
     connectionInitiatedSignal = pyqtSignal(str)
     batteryUpdatedSignal = pyqtSignal(int, object, object)
@@ -128,11 +164,17 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
     def __init__(self, *args):
         super(MainUI, self).__init__(*args)
         self.setupUi(self)
+        self.uiState = UIState.DISCONNECTED
 
-        # Restore window size if present in the config file
+        # Restore window size and position if present in the config file
         try:
             size = Config().get("window_size")
+            x = Config().get("x0")
+            y = Config().get("y0")
+            logger.info("x = {}".format(x))
+            logger.info("y = {}".format(y))
             self.resize(size[0], size[1])
+            self.move(x, y)
         except KeyError:
             pass
 
@@ -213,7 +255,8 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         self._input_discovery_signal.connect(self.device_discovery)
         self.joystickReader.device_discovery.add_callback(
             self._input_discovery_signal.emit)
-
+        self.joystickReader.connect_updated.add_callback(self.connect_updated)
+        
         # Hide the 'File' menu on OS X, since its only item, 'Exit', gets
         # merged into the application menu.
         if sys.platform == 'darwin':
@@ -221,20 +264,49 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
         # Connect UI signals
         self.logConfigAction.triggered.connect(self._show_connect_dialog)
-        self.interfaceCombo.currentIndexChanged['QString'].connect(
-            self.interfaceChanged)
         self.connectButton.clicked.connect(self._connect)
         self.scanButton.clicked.connect(self._scan)
         self.menuItemConnect.triggered.connect(self._connect)
         self.menuItemConfInputDevice.triggered.connect(
-            self._show_input_device_config_dialog)
+                                       self._show_input_device_config_dialog)
         self.menuItemExit.triggered.connect(self.closeAppRequest)
+        self.address.editingFinished.connect(self.address_changed)
+        self.confirm_address.clicked.connect(self.address_changed)
         self.batteryUpdatedSignal.connect(self._update_battery)
         self._menuitem_rescandevices.triggered.connect(self._rescan_devices)
         self._menuItem_openconfigfolder.triggered.connect(
             self._open_config_folder)
 
-        self.address.setValue(0xE7E7E7E7E7)
+        self.URI = ""
+        try:
+            self.URI = Config().get("link_uri")
+        except Exception as e:
+            logger.warning("Exception while retrieving URI [{}]".format(e))
+        if len(self.URI) > 0 :
+            address=re.sub("[\d,A-F]{10}$","",self.URI)
+            address=re.sub(address,"",self.URI)
+            if address == "":
+                self.add = self.address0
+                self._selected_interface = self.URI+"/E7E7E7E7E7"
+            else:
+                self.add = int(address,16)
+                self._selected_interface = self.URI
+            self.interfaceCombo.clear()
+            self.interfaceCombo.addItem(self.URI)
+            self.scanButton.setEnabled(False)
+            self.connectButton.setEnabled(True)
+        else :
+            address=self.address0
+            self.add = address
+            self.interfaceCombo.clear()
+            self.interfaceCombo.addItem(INTERFACE_PROMPT_TEXT)
+            self.URI = self.URI_0+"E7E7E7E7E7"
+            self.connectButton.setEnabled(False)
+            self.scanButton.setEnabled(True)
+
+        self.address.setValue(self.add)
+        self.selected_interface = self.URI
+        
 
         self._auto_reconnect_enabled = Config().get("auto_reconnect")
         self.autoReconnectCheckBox.toggled.connect(
@@ -275,10 +347,8 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         self.cf.link_quality_updated.add_callback(self.linkQualitySignal.emit)
         self.linkQualitySignal.connect(
             lambda percentage: self.linkQualityBar.setValue(percentage))
-
-        self._selected_interface = None
+        
         self._initial_scan = True
-        self._scan()
 
         # Parse the log configuration files
         self.logConfigReader = LogConfigReader(self.cf)
@@ -389,61 +459,50 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
         self._mapping_support = True
 
-    def interfaceChanged(self, interface):
-        if interface == INTERFACE_PROMPT_TEXT:
-            self._selected_interface = None
-        else:
-            self._selected_interface = interface
-        self._update_ui_state()
+        if (not (Config().get("analog"))):
+            abandon=QPushButton()
+            abandon.setText("Exit")
+            avertissement_l = QMessageBox()
+            avertissement_l.setWindowTitle("Joystick")
+            avertissement_l.setText("Warning")
+            avertissement_l.setInformativeText("Is joystick correctly configured?")
+            avertissement_l.addButton("Yes",avertissement_l.AcceptRole)
+            avertissement_l.addButton(abandon,avertissement_l.DestructiveRole)
+            avertissement_l.setIcon(avertissement_l.Critical)
+            abandon.clicked.connect(self.closeAppRequest)
+            avertissement_l.exec()
 
     def foundInterfaces(self, interfaces):
         selected_interface = self._selected_interface
-
+        logger.info('Passage 1, interface {}, nbr interfaces {}'.format(self.selected_interface, len(interfaces)))
         self.interfaceCombo.clear()
-        self.interfaceCombo.addItem(INTERFACE_PROMPT_TEXT)
+        if selected_interface == None and self.isActiveWindow():
+            msg = "No interface"
+            warningCaption = "Link"
+            QMessageBox.critical(self, warningCaption, msg)
 
-        formatted_interfaces = []
-        for i in interfaces:
-            if len(i[1]) > 0:
-                interface = "%s - %s" % (i[0], i[1])
-            else:
-                interface = i[0]
-            formatted_interfaces.append(interface)
-        self.interfaceCombo.addItems(formatted_interfaces)
-
-        if self._initial_scan:
-            self._initial_scan = False
-
-            try:
-                if len(Config().get("link_uri")) > 0:
-                    formatted_interfaces.index(Config().get("link_uri"))
-                    selected_interface = Config().get("link_uri")
-            except KeyError:
-                #  The configuration for link_uri was not found
-                pass
-            except ValueError:
-                #  The saved URI was not found while scanning
-                pass
-
-        if len(interfaces) == 1 and selected_interface is None:
-            selected_interface = interfaces[0][0]
-
-        newIndex = 0
-        if selected_interface is not None:
-            try:
-                newIndex = formatted_interfaces.index(selected_interface) + 1
-            except ValueError:
-                pass
-
-        self.interfaceCombo.setCurrentIndex(newIndex)
-
+        else :
+            if len(interfaces) < 1 and self.isActiveWindow() :
+                self.interfaceCombo.addItem(INTERFACE_PROMPT_TEXT)
+                if self.isActiveWindow():
+                    msg = "No cf2 at address:"+str(hex(self.add))
+                    warningCaption = "Link"
+                    QMessageBox.critical(self, warningCaption, msg)
+                self.found = False
+                
+                ####self.avertissement("No cf2 at interface"+selected_interface)
+            for i in interfaces:
+                self.found = True
+                j = i[0]
+                if self.add == self.address0: j=j+"/E7E7E7E7E7"
+                self.interfaceCombo.addItem(i[0])
         self.uiState = UIState.DISCONNECTED
         self._update_ui_state()
 
     def _update_ui_state(self):
         if self.uiState == UIState.DISCONNECTED:
             self.setWindowTitle("Not connected")
-            canConnect = self._selected_interface is not None
+            canConnect = self.found ####_selected_interface is not None
             self.menuItemConnect.setText("Connect to Crazyflie")
             self.menuItemConnect.setEnabled(canConnect)
             self.connectButton.setText("Connect")
@@ -460,6 +519,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             self.menuItemBootloader.setEnabled(True)
             self.logConfigAction.setEnabled(False)
             self.interfaceCombo.setEnabled(True)
+            self.confirm_address.setEnabled(True)
         elif self.uiState == UIState.CONNECTED:
             s = "Connected on %s" % self._selected_interface
             self.setWindowTitle(s)
@@ -474,6 +534,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             if len(self.cf.mem.get_mems(MemoryElement.TYPE_I2C)) > 0:
                 self._menu_cf2_config.setEnabled(True)
             self._menu_cf1_config.setEnabled(False)
+            self.confirm_address.setEnabled(False)
         elif self.uiState == UIState.CONNECTING:
             s = "Connecting to {} ...".format(self._selected_interface)
             self.setWindowTitle(s)
@@ -485,6 +546,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             self.address.setEnabled(False)
             self.menuItemBootloader.setEnabled(False)
             self.interfaceCombo.setEnabled(False)
+            self.confirm_address.setEnabled(False)
         elif self.uiState == UIState.SCANNING:
             self.setWindowTitle("Scanning ...")
             self.connectButton.setText("Connect")
@@ -496,6 +558,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             self.address.setEnabled(False)
             self.menuItemBootloader.setEnabled(False)
             self.interfaceCombo.setEnabled(False)
+            self.confirm_address.setEnabled(False)
 
     @pyqtSlot(bool)
     def toggleToolbox(self, display):
@@ -518,12 +581,6 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         self._menu_devices.clear()
         self._active_device = ""
         self.joystickReader.stop_input()
-
-        # for c in self._menu_mappings.actions():
-        #    c.setEnabled(False)
-        # devs = self.joystickReader.available_devices()
-        # if (len(devs) > 0):
-        #    self.device_discovery(devs)
 
     def _show_input_device_config_dialog(self):
         self.inputConfig = InputConfigDialogue(self.joystickReader)
@@ -549,12 +606,17 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             color = COLOR_RED
 
         self.batteryBar.setStyleSheet(progressbar_stylesheet(color))
+        self._aff_volt.setText(("%.3f" % data["pm.vbat"]))
 
     def _connected(self):
         self.uiState = UIState.CONNECTED
         self._update_ui_state()
 
-        Config().set("link_uri", str(self._selected_interface))
+        s = self._selected_interface
+        logger.info('link_uri = {}'.format(s))
+        if self.add == self.address0 : 
+            s = re.sub("/[\d,A-F]{10}$","",s)
+        Config().set("link_uri", str(s))
 
         lg = LogConfig("Battery", 1000)
         lg.add_variable("pm.vbat", "float")
@@ -618,6 +680,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                                      event.size().height()])
 
     def _connect(self):
+        self._selected_interface = self.URI
         if self.uiState == UIState.CONNECTED:
             self.cf.close_link()
         elif self.uiState == UIState.CONNECTING:
@@ -630,6 +693,8 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
     def _scan(self):
         self.uiState = UIState.SCANNING
         self._update_ui_state()
+        self.interfaceCombo.clear()
+        logger.info('on scanne sur self.URI')
         self.scanner.scanSignal.emit(self.address.value())
 
     def _display_input_device_error(self, error):
@@ -665,7 +730,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             map_name = "N/A"
             if device.input_map:
                 map_name = device.input_map_name
-            msg += " ({})".format(map_name)
+            msg = " ({})".format(map_name)
         return msg
 
     def _update_input_device_footer(self):
@@ -691,6 +756,16 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         else:
             msg = "No input device found"
         self._statusbar_label.setText(msg)
+
+    def connect_updated(self, state):
+        if state:
+            l = self.interfaceCombo.currentText()
+            if re.search("^radio",l):
+                self._connect()
+            else :
+                msg = "Please scan again, no URI defined"
+                warningCaption = "Link"
+                QMessageBox.critical(self, warningCaption, msg)
 
     def _inputdevice_selected(self, checked):
         """Called when a new input device has been selected from the menu. The
@@ -821,6 +896,20 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         self.close()
         sys.exit(0)
 
+    def address_changed(self):
+        self.add = self.address.value()
+        s = str(hex(self.add))
+        t = s[2:].upper()
+        self.URI = self.URI_0+t
+        logger.debug('Adresse changée {}, URI {}'.format(t, self.URI))
+        self._selected_interface = self.URI
+        self.interfaceCombo.clear()
+        self.interfaceCombo.addItem(INTERFACE_PROMPT_TEXT)
+        self.scanButton.setEnabled(True)
+        self.found = False
+        self.uiState = UIState.DISCONNECTED
+        self._update_ui_state()
+
 
 class ScannerThread(QThread):
 
@@ -834,3 +923,4 @@ class ScannerThread(QThread):
 
     def scan(self, address):
         self.interfaceFoundSignal.emit(cflib.crtp.scan_interfaces(address))
+

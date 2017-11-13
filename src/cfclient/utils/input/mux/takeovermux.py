@@ -45,6 +45,8 @@ class TakeOverMux(TakeOverSelectiveMux):
         super(TakeOverMux, self).__init__(*args)
         self.name = "Teacher (RPYT)"
         self._muxing = {
-            self._master: ("estop", "alt1", "alt2", "assistedControl", "exit"),
+            self._master: ("estop", "alt1", "alt2",
+             "alt3", "connect", "height_control", "landing",
+             "assistedControl", "exit"),
             self._slave: ("roll", "pitch", "yaw", "thrust")
         }

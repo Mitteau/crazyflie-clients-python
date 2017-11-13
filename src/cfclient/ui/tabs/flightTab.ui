@@ -14,6 +14,21 @@
    <string>Form</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
+   <property name="spacing">
+    <number>1</number>
+   </property>
+   <property name="leftMargin">
+    <number>3</number>
+   </property>
+   <property name="topMargin">
+    <number>3</number>
+   </property>
+   <property name="rightMargin">
+    <number>3</number>
+   </property>
+   <property name="bottomMargin">
+    <number>3</number>
+   </property>
    <item>
     <widget class="QSplitter" name="splitter_2">
      <property name="orientation">
@@ -44,7 +59,14 @@
            <height>16777215</height>
           </size>
          </property>
-         <property name="title">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <italic>true</italic>
+           <bold>true</bold>
+          </font>
+         </property>
+        <property name="title">
           <string>Basic Flight Control</string>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -57,6 +79,14 @@
                 <width>0</width>
                 <height>0</height>
                </size>
+              </property>
+              <property name="font">
+               <font>
+                <family>Noto Mono</family>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
               </property>
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select what flightmode to use:&lt;/p&gt;&lt;p&gt; * Safe prevents crashing&lt;/p&gt;&lt;p&gt; * Crazy does not prevent crashing :)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -97,6 +127,14 @@
             </item>
             <item row="2" column="0">
              <widget class="QLabel" name="label_5">
+              <property name="font">
+               <font>
+                <family>Noto Sans</family>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="text">
                <string>Assist mode</string>
               </property>
@@ -107,10 +145,25 @@
               <property name="enabled">
                <bool>false</bool>
               </property>
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
              </widget>
             </item>
             <item row="3" column="0">
              <widget class="QLabel" name="label_2">
+              <property name="font">
+               <font>
+                <family>Noto Sans</family>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="text">
                <string>Roll Trim</string>
               </property>
@@ -118,6 +171,26 @@
             </item>
             <item row="3" column="1">
              <widget class="QDoubleSpinBox" name="targetCalRoll">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <family>Noto Mono</family>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>plus goes starboard</string>
+              </property>
+              <property name="decimals">
+               <number>1</number>
+              </property>
               <property name="minimum">
                <double>-20.000000000000000</double>
               </property>
@@ -131,6 +204,23 @@
             </item>
             <item row="4" column="1">
              <widget class="QDoubleSpinBox" name="targetCalPitch">
+              <property name="font">
+               <font>
+                <family>Noto Mono</family>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>plus goes forward</string>
+              </property>
+              <property name="readOnly">
+               <bool>false</bool>
+              </property>
+              <property name="decimals">
+               <number>1</number>
+              </property>
               <property name="minimum">
                <double>-20.000000000000000</double>
               </property>
@@ -144,6 +234,14 @@
             </item>
             <item row="4" column="0">
              <widget class="QLabel" name="label_3">
+              <property name="font">
+               <font>
+                <family>Noto Sans</family>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="text">
                <string>Pitch Trim</string>
               </property>
@@ -157,6 +255,14 @@
                 <height>0</height>
                </size>
               </property>
+              <property name="font">
+               <font>
+                <family>Noto Sans</family>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="text">
                <string>Flight mode</string>
               </property>
@@ -166,6 +272,14 @@
              <widget class="QCheckBox" name="crazyflieXModeCheckbox">
               <property name="enabled">
                <bool>false</bool>
+              </property>
+              <property name="font">
+               <font>
+                <family>Noto Sans</family>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
               </property>
               <property name="text">
                <string>Crazyflie X-mode</string>
@@ -177,6 +291,14 @@
               <property name="enabled">
                <bool>false</bool>
               </property>
+              <property name="font">
+               <font>
+                <family>Noto Sans</family>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="text">
                <string>Client X-mode</string>
               </property>
@@ -185,7 +307,15 @@
             <item row="6" column="0">
              <widget class="QRadioButton" name="angularPidRadioButton">
               <property name="enabled">
-               <bool>false</bool>
+               <bool>true</bool>
+              </property>
+              <property name="font">
+               <font>
+                <family>Noto Sans</family>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
               </property>
               <property name="text">
                <string>Attitude control</string>
@@ -198,7 +328,16 @@
             <item row="6" column="1">
              <widget class="QRadioButton" name="ratePidRadioButton">
               <property name="enabled">
-               <bool>false</bool>
+-               <bool>false</bool>
+               <bool>true</bool>
+              </property>
+              <property name="font">
+               <font>
+                <family>Noto Sans</family>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
               </property>
               <property name="text">
                <string>Rate control</string>
@@ -230,14 +369,34 @@
            <height>16777215</height>
           </size>
          </property>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <italic>true</italic>
+           <bold>true</bold>
+          </font>
+         </property>
          <property name="title">
           <string>Advanced Flight Control</string>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <property name="topMargin">
+           <number>6</number>
+          </property>
           <item>
            <layout class="QGridLayout" name="gridLayout_4">
+            <property name="spacing">
+             <number>2</number>
+            </property>
             <item row="2" column="0">
              <widget class="QLabel" name="label_9">
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="text">
                <string>Max thrust (%)</string>
               </property>
@@ -245,6 +404,13 @@
             </item>
             <item row="0" column="0">
              <widget class="QLabel" name="label_7">
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="layoutDirection">
                <enum>Qt::LeftToRight</enum>
               </property>
@@ -255,6 +421,13 @@
             </item>
             <item row="3" column="0">
              <widget class="QLabel" name="label">
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="text">
                <string>Min thrust (%)</string>
               </property>
@@ -262,6 +435,13 @@
             </item>
             <item row="5" column="0">
              <widget class="QLabel" name="label_26">
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="text">
                <string>Thrust lowering slewrate (%/sec)</string>
               </property>
@@ -272,6 +452,13 @@
             </item>
             <item row="4" column="0">
              <widget class="QLabel" name="label_31">
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="text">
                <string>SlewLimit (%)</string>
               </property>
@@ -279,25 +466,113 @@
             </item>
             <item row="1" column="0">
              <widget class="QLabel" name="label_32">
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="text">
                <string>Max Yaw angle/rate</string>
               </property>
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="QDoubleSpinBox" name="maxThrust"/>
+             <widget class="QDoubleSpinBox" name="maxThrust">
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="decimals">
+               <number>0</number>
+              </property>
+             </widget>
             </item>
             <item row="3" column="1">
-             <widget class="QDoubleSpinBox" name="minThrust"/>
+             <widget class="QDoubleSpinBox" name="minThrust">
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="decimals">
+               <number>0</number>
+              </property>
+             </widget>
             </item>
             <item row="4" column="1">
-             <widget class="QDoubleSpinBox" name="slewEnableLimit"/>
+             <widget class="QDoubleSpinBox" name="slewEnableLimit">
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="decimals">
+               <number>0</number>
+              </property>
+             </widget>
             </item>
             <item row="5" column="1">
-             <widget class="QDoubleSpinBox" name="thrustLoweringSlewRateLimit"/>
+             <widget class="QDoubleSpinBox" name="thrustLoweringSlewRateLimit">
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="decimals">
+               <number>0</number>
+              </property>
+             </widget>
             </item>
             <item row="1" column="1">
              <widget class="QSpinBox" name="maxYawRate">
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="minimum">
                <number>0</number>
               </property>
@@ -311,6 +586,19 @@
             </item>
             <item row="0" column="1">
              <widget class="QSpinBox" name="maxAngle">
+              <property name="maximumSize">
+               <size>
+                <width>80</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="minimum">
                <number>0</number>
               </property>
@@ -335,35 +623,182 @@
            <height>0</height>
           </size>
          </property>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <italic>true</italic>
+           <bold>true</bold>
+          </font>
+         </property>
          <property name="title">
           <string>Expansion boards</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_6">
+          <property name="leftMargin">
+           <number>3</number>
+          </property>
+          <property name="topMargin">
+           <number>3</number>
+          </property>
+          <property name="rightMargin">
+           <number>3</number>
+          </property>
+          <property name="bottomMargin">
+           <number>3</number>
+          </property>
+          <property name="spacing">
+           <number>1</number>
+          </property>
           <item row="0" column="0">
            <layout class="QGridLayout" name="gridLayout_2">
-            <item row="0" column="1">
-             <widget class="QComboBox" name="_led_ring_effect">
-              <property name="enabled">
+            <property name="spacing">
+             <number>2</number>
+            </property>
+            <item row="3" column="1">
+             <widget class="QComboBox" name="_sound_effect">
+             <property name="enabled">
                <bool>false</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>200</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>120</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="maxVisibleItems">
+               <number>20</number>
               </property>
              </widget>
             </item>
             <item row="0" column="0">
              <widget class="QLabel" name="label_8">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="text">
                <string>LED-ring effect</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="1">
+            <item row="0" column="1">
+             <widget class="QComboBox" name="_led_ring_effect">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>200</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>120</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="maxVisibleItems">
+               <number>20</number>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
              <widget class="QCheckBox" name="_led_ring_headlight">
               <property name="enabled">
                <bool>false</bool>
               </property>
+              <property name="font">
+               <font>
+                <weight>50</weight>
+                <italic>false</italic>
+                <bold>false</bold>
+               </font>
+              </property>
               <property name="text">
-               <string>LED-ring headlight</string>
+               <string>LED headlights</string>
               </property>
              </widget>
+            </item>
+            <item row="3" column="0">
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <item>
+               <widget class="QLabel" name="label_10">
+                <property name="maximumSize">
+                 <size>
+                  <width>60</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Sounds: </string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="_sound_all">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>all sounds</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
            </layout>
           </item>
@@ -398,6 +833,13 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <italic>true</italic>
+           <bold>true</bold>
+          </font>
+         </property>
          <property name="title">
           <string>Flight Data</string>
          </property>
@@ -423,13 +865,28 @@
               </property>
               <item row="5" column="0">
                <widget class="QLabel" name="label_17">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
                 <property name="text">
                  <string>Height</string>
                 </property>
                </widget>
               </item>
               <item row="2" column="4">
-               <widget class="QLineEdit" name="actualPitch"/>
+               <widget class="QLineEdit" name="actualPitch">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+               </widget>
               </item>
               <item row="1" column="8" rowspan="5">
                <widget class="QProgressBar" name="actualM1">
@@ -459,6 +916,13 @@
               </item>
               <item row="0" column="6">
                <widget class="QLabel" name="label_6">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
                 <property name="text">
                  <string>Thrust</string>
                 </property>
@@ -471,6 +935,13 @@
                <widget class="QLineEdit" name="actualHeight">
                 <property name="enabled">
                  <bool>false</bool>
+                </property>
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
                 </property>
                 <property name="text">
                  <string/>
@@ -488,7 +959,15 @@
                </widget>
               </item>
               <item row="3" column="2">
-               <widget class="QLineEdit" name="targetRoll"/>
+               <widget class="QLineEdit" name="targetRoll">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+               </widget>
               </item>
               <item row="1" column="6" rowspan="5">
                <widget class="QProgressBar" name="thrustProgress">
@@ -523,6 +1002,13 @@
               </item>
               <item row="1" column="0">
                <widget class="QLabel" name="label_16">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
                 <property name="text">
                  <string>Thrust</string>
                 </property>
@@ -530,6 +1016,13 @@
               </item>
               <item row="0" column="8">
                <widget class="QLabel" name="M1label">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
                 <property name="text">
                  <string>M1</string>
                 </property>
@@ -537,20 +1030,42 @@
               </item>
               <item row="3" column="0">
                <widget class="QLabel" name="label_12">
-                <property name="text">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+                 <property name="text">
                  <string>Roll</string>
                 </property>
                </widget>
               </item>
               <item row="0" column="10">
                <widget class="QLabel" name="M3label">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
                 <property name="text">
                  <string>M3</string>
                 </property>
                </widget>
               </item>
               <item row="4" column="2">
-               <widget class="QLineEdit" name="targetYaw"/>
+               <widget class="QLineEdit" name="targetYaw">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+               </widget>
               </item>
               <item row="1" column="9" rowspan="5">
                <widget class="QProgressBar" name="actualM2">
@@ -566,10 +1081,25 @@
                </widget>
               </item>
               <item row="2" column="2">
-               <widget class="QLineEdit" name="targetPitch"/>
+               <widget class="QLineEdit" name="targetPitch">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+               </widget>
               </item>
               <item row="2" column="0">
                <widget class="QLabel" name="label_11">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
                 <property name="text">
                  <string>Pitch</string>
                 </property>
@@ -577,6 +1107,13 @@
               </item>
               <item row="0" column="4">
                <widget class="QLabel" name="label_15">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
                 <property name="text">
                  <string>Actual</string>
                 </property>
@@ -586,10 +1123,25 @@
                </widget>
               </item>
               <item row="4" column="4">
-               <widget class="QLineEdit" name="actualYaw"/>
+               <widget class="QLineEdit" name="actualYaw">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+               </widget>
               </item>
               <item row="0" column="9">
                <widget class="QLabel" name="M2label">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
                 <property name="text">
                  <string>M2</string>
                 </property>
@@ -609,35 +1161,80 @@
                </widget>
               </item>
               <item row="1" column="2">
-               <widget class="QLineEdit" name="targetThrust"/>
+               <widget class="QLineEdit" name="targetThrust">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+               </widget>
               </item>
               <item row="0" column="11">
                <widget class="QLabel" name="M4label">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
                 <property name="text">
                  <string>M4</string>
                 </property>
                </widget>
               </item>
               <item row="1" column="4">
-               <widget class="QLineEdit" name="actualThrust"/>
-              </item>
+               <widget class="QLineEdit" name="actualThrust">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+               </widget>
+             </item>
               <item row="0" column="12" rowspan="6">
                <layout class="QGridLayout" name="gridLayout_7"/>
               </item>
               <item row="4" column="0">
                <widget class="QLabel" name="label_13">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
                 <property name="text">
                  <string>Yaw</string>
                 </property>
                </widget>
               </item>
               <item row="3" column="4">
-               <widget class="QLineEdit" name="actualRoll"/>
+               <widget class="QLineEdit" name="actualRoll">
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+               </widget>
               </item>
               <item row="5" column="2">
                <widget class="QLineEdit" name="targetHeight">
                 <property name="enabled">
                  <bool>false</bool>
+                </property>
+                <property name="font">
+                 <font>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
                 </property>
                 <property name="text">
                  <string/>

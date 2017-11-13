@@ -136,7 +136,7 @@ class WiimoteReader(_Reader):
         self.wm.rpt_mode = cwiid.RPT_BTN
         logger.info("FOUND WIIMOTE")
         self.data = {"roll": 0.0, "pitch": 0.0, "yaw": 0.0,
-                     "thrust": -1.0, "estop": False, "exit": False,
+                     "thrust": -1.0, "estop": False, "exit": False,"height_control":0., "landing":False,
                      "assistedControl": False, "alt1": False, "alt2": False,
                      "pitchNeg": False, "rollNeg": False,
                      "pitchPos": False, "rollPos": False}

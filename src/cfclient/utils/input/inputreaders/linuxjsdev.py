@@ -65,6 +65,8 @@ JSIOCGBUTTONS = 0x80016a12
 MODULE_MAIN = "Joystick"
 MODULE_NAME = "linuxjsdev"
 
+PROFILER = False
+
 
 class JEvent(object):
     """
@@ -84,6 +86,16 @@ class JEvent(object):
 # Constants
 TYPE_BUTTON = 1
 TYPE_AXIS = 2
+SOFT_THRUST = .4
+SOFT_THRUST_S = .2
+ST_A = .333 # (1-SOFT_THRUST)/(2-SOFT_THRUST_S)
+ST_B = .667 # 1-ST_A
+
+def profile(self, n, v) : # joypad axis resting at -32768
+        if n == 5 :
+            if v < -1. + SOFT_THRUST_S : v = 0.
+            else : v = ST_B + v * ST_A
+        return v
 
 
 class _JS():
@@ -144,6 +156,9 @@ class _JS():
         """Update the internal absolute state of buttons and axes"""
         if jsdata[JE_TYPE] & JS_EVENT_AXIS != 0:
             self.axes[jsdata[JE_NUMBER]] = jsdata[JE_VALUE] / 32768.0
+            if PROFILER : self.axes[jsdata[JE_NUMBER]] = profile(self, jsdata[JE_NUMBER], jsdata[JE_VALUE] / 32768.0)
+#            else self.axes[jsdata[JE_NUMBER]] = jsdata[JE_VALUE]
+            else : self.axes[jsdata[JE_NUMBER]] = jsdata[JE_VALUE] / 32768.0
         elif jsdata[JE_TYPE] & JS_EVENT_BUTTON != 0:
             self.buttons[jsdata[JE_NUMBER]] = jsdata[JE_VALUE]
 
@@ -188,6 +203,7 @@ class _JS():
             raise Exception("Joystick device not opened")
 
         self._read_all_events()
+####        logger.info("Entrée manette {}".format([self.axes, self.buttons]))  #### surveillance input
 
         return [self.axes, self.buttons]
 
