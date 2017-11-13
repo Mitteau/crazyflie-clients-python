@@ -105,10 +105,10 @@ class InputConfigDialogue(QtWidgets.QWidget, inputconfig_widget_class):
             lambda: self._button_detect(
                 "rollNeg", "Roll Cal Negative",
                 "Press the button for Roll negative calibration"))
-        self.detectKillswitch.clicked.connect(
+        self.detectConnect.clicked.connect(
             lambda: self._button_detect(
-                "killswitch", "Killswitch",
-                "Press the button for the killswitch (will disable motors)"))
+                "connect", "connect",
+                "Press the button for the connect (will connect/deconnect cf2)"))
         self.detectAlt1.clicked.connect(
             lambda: self._button_detect(
                 "alt1", "Alternative function 1",
@@ -117,6 +117,10 @@ class InputConfigDialogue(QtWidgets.QWidget, inputconfig_widget_class):
             lambda: self._button_detect(
                 "alt2", "Alternative function 2",
                 "The alternative function 2 that will do a callback"))
+        self.detectAlt3.clicked.connect(
+            lambda: self._button_detect(
+                "alt3", "Alternative function 3",
+                "The alternative function 3 that will do a callback"))
         self.detectExitapp.clicked.connect(
             lambda: self._button_detect(
                 "exitapp", "Exit application",
@@ -142,9 +146,9 @@ class InputConfigDialogue(QtWidgets.QWidget, inputconfig_widget_class):
             self.detectYaw, self.detectThrust,
             self.detectPitchPos, self.detectPitchNeg,
             self.detectRollPos, self.detectRollNeg,
-            self.detectKillswitch, self.detectExitapp,
+            self.detectConnect, self.detectExitapp,
             self._detect_assisted_control, self.detectAlt1,
-            self.detectAlt2, self.detectMuxswitch]
+            self.detectAlt2, self.detectAlt3, self.detectMuxswitch]
 
         self._button_to_detect = ""
         self._axis_to_detect = ""
@@ -178,9 +182,10 @@ class InputConfigDialogue(QtWidgets.QWidget, inputconfig_widget_class):
             "pitchNeg": self.pitchNeg,
             "rollPos": self.rollPos,
             "rollNeg": self.rollNeg,
-            "killswitch": self.killswitch,
+            "connect": self.connect,
             "alt1": self.alt1,
             "alt2": self.alt2,
+            "alt3": self.alt3,
             "exitapp": self.exitapp,
             "assistedControl": self._assisted_control,
             "muxswitch": self.muxswitch,

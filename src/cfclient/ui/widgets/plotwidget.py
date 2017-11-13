@@ -42,6 +42,7 @@ from PyQt5.QtWidgets import QButtonGroup
 from PyQt5.QtCore import *  # noqa
 from PyQt5.QtWidgets import *  # noqa
 from PyQt5.Qt import *  # noqa
+from pyqtgraph import AxisItem
 
 import cfclient
 
@@ -142,11 +143,19 @@ class PlotWidget(QtWidgets.QWidget, plot_widget_class):
         self._plot_widget.hideButtons()
         self._plot_widget.setLabel('bottom', "Time", "ms")
         self._plot_widget.addLegend()
-        self._plot_widget.getViewBox().disableAutoRange(ViewBox.XAxis)
-        self._plot_widget.getViewBox().sigRangeChangedManually.connect(
-            self._manual_range_change)
-        self._plot_widget.getViewBox().setMouseEnabled(x=False, y=True)
-        self._plot_widget.getViewBox().setMouseMode(ViewBox.PanMode)
+
+        ma_vue=self._plot_widget.getViewBox()
+        ma_vue.disableAutoRange(ViewBox.XAxis)
+        ma_vue.sigRangeChangedManually.connect(self._manual_range_change)
+        ma_vue.setMouseEnabled(x=False, y=True)
+        ma_vue.setMouseMode(ViewBox.PanMode)
+        mon_axe=AxisItem("bottom", linkView=ma_vue) ####
+#        mon_axe.linkToView(ma_vue)
+        logging.info("lien vue {}".format(ma_vue))
+        mon_axe.setGrid(255)
+#        self._plot_widget.getViewBox().XAxis.setGrid(100) ####
+
+
 
         self.plotLayout.addWidget(self._plot_widget)
 

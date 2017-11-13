@@ -253,7 +253,7 @@ class ParamTab(Tab, param_tab_class):
 
     def _connected(self, link_uri):
         self._model.set_toc(self.cf.param.toc.toc, self.helper.cf)
-        self.paramTree.expandAll()
+        ####self.paramTree.expandAll()
 
     def _disconnected(self, link_uri):
         self._model.beginResetModel()

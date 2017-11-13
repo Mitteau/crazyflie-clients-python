@@ -49,8 +49,10 @@ class InputData:
 
     def __init__(self):
         # self._toggled = {}
-        self._axes = ("roll", "pitch", "yaw", "thrust")
-        self._buttons = ("alt1", "alt2", "estop", "exit", "pitchNeg",
+        self._axes = ("roll", "pitch", "yaw", "thrust", "height_control")
+        self._buttons = ("alt1", "alt2", "estop",
+                         "alt3", "connect",
+                         "exit", "pitchNeg", "landing",
                          "pitchPos", "rollNeg", "rollPos", "assistedControl",
                          "muxswitch")
         for axis in self._axes:

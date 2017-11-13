@@ -1,0 +1,53 @@
+{
+  "inputconfig": {
+    "inputdevice": {
+      "axis": [
+        {
+          "name": "assistedControl",
+          "type": "Input.BUTTON",
+          "key": "assistedControl",
+          "scale": 1,
+          "id": 3
+        },
+        {
+          "name": "alt3",
+          "type": "Input.BUTTON",
+          "key": "alt3",
+          "scale": 1,
+          "id": 1
+        },
+        {"name":"Connection", "type":"Input.BUTTON", "id":1, "scale":1, "key":"connect"},
+        {
+          "name": "roll",
+          "type": "Input.AXIS",
+          "key": "roll",
+          "scale": 1.0,
+          "id": 0
+        },
+        {
+          "name": "thrust",
+          "type": "Input.AXIS",
+          "key": "thrust",
+          "scale": -1.0,
+          "id": 2
+        },
+        {
+          "name": "pitch",
+          "type": "Input.AXIS",
+          "key": "pitch",
+          "scale": -1.0,
+          "id": 1
+        },
+        {
+          "name": "yaw",
+          "type": "Input.AXIS",
+          "key": "yaw",
+          "scale": 1.0,
+          "id": 4
+        }
+      ],
+      "updateperiod": 10,
+      "name": "Barry"
+    }
+  }
+}

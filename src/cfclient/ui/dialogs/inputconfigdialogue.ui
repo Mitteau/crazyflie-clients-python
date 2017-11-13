@@ -400,8 +400,8 @@
          <widget class="QWidget" name="gridLayoutWidget_5">
           <property name="geometry">
            <rect>
-            <x>10</x>
-            <y>170</y>
+            <x>40</x>
+            <y>180</y>
             <width>518</width>
             <height>151</height>
            </rect>
@@ -504,13 +504,23 @@
          <widget class="QWidget" name="gridLayoutWidget_2">
           <property name="geometry">
            <rect>
-            <x>600</x>
-            <y>158</y>
-            <width>292</width>
-            <height>202</height>
+            <x>620</x>
+            <y>20</y>
+            <width>311</width>
+            <height>261</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_5">
+           <item row="6" column="0">
+            <widget class="QCheckBox" name="alt3">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Alt 3</string>
+             </property>
+            </widget>
+           </item>
            <item row="5" column="1">
             <widget class="QPushButton" name="detectAlt2">
              <property name="enabled">
@@ -545,7 +555,7 @@
             </widget>
            </item>
            <item row="2" column="1">
-            <widget class="QPushButton" name="detectKillswitch">
+            <widget class="QPushButton" name="detectConnect">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -555,12 +565,12 @@
             </widget>
            </item>
            <item row="2" column="0">
-            <widget class="QCheckBox" name="killswitch">
+            <widget class="QCheckBox" name="connect">
              <property name="enabled">
               <bool>false</bool>
              </property>
              <property name="text">
-              <string>Killswitch</string>
+              <string>Connect</string>
              </property>
              <property name="checkable">
               <bool>true</bool>
@@ -626,7 +636,7 @@
              </property>
             </widget>
            </item>
-           <item row="6" column="0">
+           <item row="7" column="0">
             <widget class="QCheckBox" name="muxswitch">
              <property name="enabled">
               <bool>false</bool>
@@ -639,8 +649,18 @@
              </property>
             </widget>
            </item>
-           <item row="6" column="1">
+           <item row="7" column="1">
             <widget class="QPushButton" name="detectMuxswitch">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Detect</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
+            <widget class="QPushButton" name="detectAlt3">
              <property name="enabled">
               <bool>false</bool>
              </property>

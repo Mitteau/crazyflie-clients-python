@@ -1,0 +1,22 @@
+{
+  "inputconfig": {
+    "inputdevice":
+    {"name": "Xbox 360 wireless left-handed, JCM", "updateperiod":10,
+     "axis": [
+          {"name":"Roll", "type":"Input.AXIS", "id":3, "scale":1.0, "key":"roll"},
+          {"name":"Pitch", "type":"Input.AXIS", "id":4, "scale":-1.0, "key":"pitch"},
+          {"name":"Yaw", "type":"Input.AXIS", "id":0, "scale":1.0, "key":"yaw"},
+          {"name":"Thrust", "type":"Input.AXIS", "id":1, "scale":-1.0, "key":"thrust"},
+          {"name":"Alt1(ring)+", "type":"Input.BUTTON", "id":2, "scale":1, "key":"alt1"},
+          {"name":"Alt2(HL)+", "type":"Input.BUTTON", "id":3, "scale":1, "key":"alt2"},
+          {"name":"Alt3(sound)+", "type":"Input.BUTTON", "id":1, "scale":1, "key":"alt3"},
+          {"name":"assistedControl", "type":"Input.BUTTON", "id":4, "scale":1, "key":"assistedControl"},
+          {"name":"Connection", "type":"Input.BUTTON", "id":7, "scale":1, "key":"connect"},
+          {"name":"Pitch Cal+", "type":"Input.BUTTON", "id":14, "scale":-1, "key":"pitchNeg"},
+          {"name":"Pitch Cal-", "type":"Input.BUTTON", "id":13, "scale":1, "key":"pitchPos"},
+          {"name":"Roll Cal +", "type":"Input.BUTTON", "id":12, "scale":1, "key":"rollPos"},
+          {"name":"Roll Cal -", "type":"Input.BUTTON", "id":11, "scale":-1, "key":"rollNeg"},
+          {"name":"killswitch", "type":"Input.BUTTON", "id":6, "scale":1, "key":"estop"}
+     ]}
+  }
+}
