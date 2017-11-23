@@ -47,7 +47,7 @@ __all__ = ['AboutDialog']
 DEBUG_INFO_FORMAT = """
 <b>Cfclient</b><br>
 Cfclient version: {version}<br>
-Modified: "Nexon-V1.0, standard joystick."
+Modified: "Nexon-étape 2."
 System: {system}<br>
 Python: {pmajor}.{pminor}.{pmicro}<br>
 Qt: {qt_version}<br>

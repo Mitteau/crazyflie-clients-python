@@ -170,7 +170,7 @@ class InputReaderInterface(object):
         # Thrust limiting (slew, minimum and emergency stop)
 
         current_time = time()
-        if self.input.springy_throttle:
+        if self.input.springy_throttle: #### cas manette xbox
             if assisted_control and \
                     (self.input.get_assisted_control() ==
                      self.input.ASSISTED_CONTROL_ALTHOLD or

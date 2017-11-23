@@ -634,6 +634,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             mems[0].write_data(self._led_write_done)
 
     def _disconnected(self):
+        self.found = True
         self.uiState = UIState.DISCONNECTED
         self._update_ui_state()
 
