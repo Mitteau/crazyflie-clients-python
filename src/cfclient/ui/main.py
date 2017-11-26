@@ -270,6 +270,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         self.menuItemConfInputDevice.triggered.connect(
                                        self._show_input_device_config_dialog)
         self.menuItemExit.triggered.connect(self.closeAppRequest)
+####        self.address.setFocusPolicy(self.address.StrongFocus)
         self.address.editingFinished.connect(self.address_changed)
         self.confirm_address.clicked.connect(self.address_changed)
         self.batteryUpdatedSignal.connect(self._update_battery)
@@ -904,7 +905,6 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         self.URI = self.URI_0+t
         logger.debug('Adresse changée {}, URI {}'.format(t, self.URI))
         self._selected_interface = self.URI
-        self.interfaceCombo.clear()
         self.interfaceCombo.addItem(INTERFACE_PROMPT_TEXT)
         self.scanButton.setEnabled(True)
         self.found = False

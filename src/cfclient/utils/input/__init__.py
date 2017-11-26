@@ -66,6 +66,7 @@ logger = logging.getLogger(__name__)
 
 
 MAX_THRUST = 0xFFFF
+DEAD_BAND_THRUST = .15    #### joystick quality dependant 
 INITIAL_TARGET_HEIGHT = 0.4
 MAX_TARGET_HEIGHT = 0.6
 MIN_TARGET_HEIGHT = 0.05
@@ -78,11 +79,18 @@ SOFT_THRUST = 40.
 SOFT_THRUST_S = 20.
 ST_A = .75 # (1-SOFT_THRUST)/(1-SOFT_THRUST_S)
 ST_B = 25 # 1-ST_A
+ST_A_lim= 1.02
+ST_B_lim = -2
 
 
-def profile(v) : # joypad axis resting at -32768 voir cas ou la poussée est limitée par flightTab
+def profile(v) :
         if v < SOFT_THRUST_S : v = 0.
         else : v = ST_B + v * ST_A
+        return v
+
+def profile_lim(v) :
+        if v < SOFT_THRUST_S : v = 0.
+        else : v = ST_B_lim + v * ST_A_lim
         return v
 
 class JoystickReader(object):
@@ -418,10 +426,13 @@ class JoystickReader(object):
                     self.landing = True
 
             if data.toggled.estop:
-                       try:
-                        self.emergency_stop_updated.call(data.estop)
-                       except Exception as e:
-                        logger.warning("Exception while doing callback from"
+                self.input_updated.call(0, 0, 0, 0)
+                self.max_thrust = 0
+                self.isAssisted = False
+                try:
+                    self.emergency_stop_updated.call(data.estop)
+                except Exception as e:
+                    logger.warning("Exception while doing callback from"
                                        "input-device for estop: {}".format(e))
 
             if data.toggled.pitchNeg and data.pitchNeg:
@@ -439,23 +450,19 @@ class JoystickReader(object):
 
 #### Gestion selon type d'assistance
             if self.isAssisted :
-                
-
-                vz = 0.
+                thrust = JoystickReader.deadband(data.thrust,DEAD_BAND_THRUST)
                 if self._assisted_control == JoystickReader.ASSISTED_CONTROL_ALTHOLD :
                     roll = data.roll + self.trim_roll
                     pitch = data.pitch + self.trim_pitch
                     yawrate = data.yaw
-                    # Scale thrust to a value between -1.0 to 1.0
                     if self.landing : vz = - Vz
-                    else : vz = Vz * data.thrust
+                    else : vz = Vz * thrust
                     # Integrate velocity setpoint
                     self._target_height += vz * INPUT_READ_PERIOD
                     # Cap target height
-                    if self._target_height > MAX_TARGET_HEIGHT:
-                            self._target_height = MAX_TARGET_HEIGHT
                     if self._target_height < MIN_TARGET_HEIGHT:
                         if self.landing : self._halt()
+                        else :self._target_height = MIN_TARGET_HEIGHT
                     self.althold_input_updated.call(roll, -pitch,
                                                            yawrate,
                                                            self._target_height)
@@ -464,9 +471,8 @@ class JoystickReader(object):
                     roll = data.roll + self.trim_roll
                     pitch = data.pitch + self.trim_pitch
                     yawrate = data.yaw
-                    # Scale thrust to a value between -1.0 to 1.0
-                    if self.landing : vz =  -Vz
-                    else : vz = Vz * data.thrust
+                    if self.landing : vz = -Vz
+                    else : vz = Vz * thrust
                     # Integrate velocity setpoint
                     self._target_height += vz * INPUT_READ_PERIOD
                     # Cap target height
@@ -474,17 +480,17 @@ class JoystickReader(object):
                         self._target_height = MAX_TARGET_HEIGHT
                     if self._target_height < MIN_TARGET_HEIGHT:
                         if self.landing : self._halt()
+                        else : self._target_height = MIN_TARGET_HEIGHT
                     self.heighthold_input_updated.call(roll, -pitch,
                                                            yawrate,
                                                            self._target_height)
                 
                 elif self._assisted_control == JoystickReader.ASSISTED_CONTROL_HOVER :
-                    vy = - data.roll / 2.
-                    vx = data.pitch / 2.
+                    vy = - JoystickReader.deadband(data.roll,.15) / 2.
+                    vx = JoystickReader.deadband(data.pitch,.15) / 2.
                     yawrate = data.yaw
-                    # Scale thrust to a value between -1.0 to 1.0
                     if self.landing : vz = - Vz
-                    else : vz = Vz * data.thrust
+                    else : vz = Vz * thrust
                     # Integrate velocity setpoint
                     self._target_height += vz * INPUT_READ_PERIOD
                     # Cap target height
@@ -492,6 +498,7 @@ class JoystickReader(object):
                         self._target_height = MAX_TARGET_HEIGHT
                     if self._target_height < MIN_TARGET_HEIGHT:
                         if self.landing : self._halt()
+                        else : self._target_height = MIN_TARGET_HEIGHT
                     self.hover_input_updated.call(vx, vy,
                                                            yawrate,
                                                            self._target_height)
@@ -505,12 +512,15 @@ class JoystickReader(object):
                 yawrate = data.yaw
                 # Scale thrust to a value between -1.0 to 1.0
                 dtt = data.thrust
-                if PROFILER : dtt = profile(dtt)
+                if PROFILER :
+                    dtt = profile(dtt)
+                    lim_t = profile_lim(self.max_thrust)
+                    if dtt > lim_t : dtt = lim_t
                 data.thrust = JoystickReader.p2t(dtt)
                 if data.thrust < 0:
                      data.thrust = 0
-                if data.thrust > 0xFFFF:
-                     data.thrust = 0xFFFF
+                if data.thrust > MAX_THRUST:
+                     data.thrust = MAX_THRUST
                 self.input_updated.call(data.roll + self.trim_roll,
                                          data.pitch + self.trim_pitch,
                                          data.yaw, data.thrust)
@@ -574,12 +584,12 @@ class JoystickReader(object):
 
     def deadband(value, threshold):
         if abs(value) < threshold:
-            value = 0
-        elif value > 0:
+            value = 0.
+        elif value > 0.:
             value -= threshold
-        elif value < 0:
+        elif value < 0.:
             value += threshold
-        return value / (1 - threshold)
+        return value / (1. - threshold)
 
 
 

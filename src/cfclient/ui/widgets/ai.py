@@ -31,11 +31,15 @@ Attitude indicator widget.
 
 import sys
 
+import logging ####
+
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets, QtCore
 
 __author__ = 'Bitcraze AB'
 __all__ = ['AttitudeIndicator']
+
+logger = logging.getLogger(__name__)    ####
 
 
 class AttitudeIndicator(QtWidgets.QWidget):
