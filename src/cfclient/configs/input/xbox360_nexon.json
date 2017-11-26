@@ -11,6 +11,7 @@
           {"name":"Alt2(HL)+", "type":"Input.BUTTON", "id":3, "scale":1, "key":"alt2"},
           {"name":"Alt3(sound)+", "type":"Input.BUTTON", "id":1, "scale":1, "key":"alt3"},
           {"name":"assistedControl", "type":"Input.BUTTON", "id":4, "scale":1, "key":"assistedControl"},
+          {"name":"Landing", "type":"Input.BUTTON", "id":0, "scale":1, "key":"landing"},
           {"name":"Connection", "type":"Input.BUTTON", "id":7, "scale":1, "key":"connect"},
           {"name":"Pitch Cal+", "type":"Input.BUTTON", "id":14, "scale":-1, "key":"pitchNeg"},
           {"name":"Pitch Cal-", "type":"Input.BUTTON", "id":13, "scale":1, "key":"pitchPos"},

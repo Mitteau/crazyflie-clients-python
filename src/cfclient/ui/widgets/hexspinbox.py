@@ -44,6 +44,7 @@ class HexSpinBox(QAbstractSpinBox):
         regexp = QtCore.QRegExp('^0x[0-9A-Fa-f]{1,10}$')
         self.validator = QtGui.QRegExpValidator(regexp)
         self._value = 0
+####        self.StrongFocus = QAbstractSpinBox.QWidget.StrongFocus
 
     def validate(self, text, pos):
         return self.validator.validate(text, pos)
