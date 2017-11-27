@@ -56,7 +56,6 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import QDir
 from PyQt5.QtCore import QThread
 from PyQt5.QtCore import QUrl
-####################from PyQt5.QtGui import QStringRef
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtWidgets import QActionGroup
 from PyQt5.QtWidgets import QLabel
