@@ -409,6 +409,7 @@ class FlightTab(Tab, flight_tab_class):
         except AttributeError as e:
             logger.warning(str(e))
 
+        self.helper.cf.param.set_value("flightmode.althold", "0")
         self._assist_mode_combo.setEnabled(True)
         Config().set("assistedControl", 2)
         self.checkAssisted.setEnabled(True) ####
@@ -894,7 +895,7 @@ class FlightTab(Tab, flight_tab_class):
         self._assist_mode_combo.setEnabled(True)
 
         try:
-            assistmodeComboIndex = Config().get("assistedControl")
+            assistmodeComboIndex = 3 ####Config().get("assistedControl")
             logger.info('Mode {}'.format(assistmodeComboIndex))
             if assistmodeComboIndex == 3 and not hoverPossible:
                 assistmodeComboIndex = 0
