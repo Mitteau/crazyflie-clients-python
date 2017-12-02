@@ -30,6 +30,8 @@ The console tab is used as a console for printouts from the Crazyflie.
 """
 
 import logging
+import struct
+
 
 from PyQt5 import uic
 from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
@@ -60,7 +62,6 @@ dialog_tab_class = uic.loadUiType(cfclient.module_path +
         self.setupUi(self)
 """
 
-
 class DialogTab(Tab, dialog_tab_class):
     """Dialog tab for dialog with Crazyflie"""
     _received_pk = pyqtSignal(object)
@@ -90,6 +91,7 @@ class DialogTab(Tab, dialog_tab_class):
         self.speakButton.clicked.connect(self.speak)
         self.send.returnPressed.connect(self.send_pk)
         self.line_number.activated.connect(self.change_lines)
+        self.format.activated.connect(self.change_format)
         self.port.activated.connect(self.change_port)
         self.channel.activated.connect(self.change_channel)
         self.direction.activated.connect(self.change_direction)
@@ -103,6 +105,7 @@ class DialogTab(Tab, dialog_tab_class):
         self.lines_max = -1
         self.the_direction = 2
         self.speaking = False
+        self.format = 0
 
         self.Q = QWidget(self.tabWidget)
         self.Q.setVisible(False)
@@ -217,11 +220,16 @@ class DialogTab(Tab, dialog_tab_class):
     def change_direction(self, i) :
         self.the_direction = i
 
+    def change_format(self, i) :
+        self.format = i
+
     def printText_out(self, pk):
-        if self.the_direction > 0 : self.printText(pk, False)
+        if self.the_direction > 0 : 
+            self.printText(pk, False)
 
     def printText_in(self, pk):
-        if self.the_direction == 0 or self.the_direction > 1: self.printText(pk, True)
+        if self.the_direction == 0 or self.the_direction > 1: 
+            self.printText(pk, True)
 
     def printText(self, pk, into):
         if (self.line > self.lines_max) and (self.lines_max >= 0) : 
@@ -232,12 +240,19 @@ class DialogTab(Tab, dialog_tab_class):
                  and (pk._get_channel() == self.the_channel or self.the_channel < 0)\
                  and (self.line <= self.lines_max or self.lines_max < 0)\
                  and self.started :
+            if into : self.receive.setTextColor(Qt.black)
+            else : self.receive.setTextColor(Qt.red)
             self.receive.insertPlainText(str(self.line)+" - ")
             if into : self.receive.insertPlainText("IN"+" - ")
             else : self.receive.insertPlainText("OUT"+" - ")
             self.receive.insertPlainText(str(pk._get_port())+" - ")
             self.receive.insertPlainText(str(pk._get_channel())+" - ")
-            self.receive.insertPlainText(str(pk._get_data())+"\n")
+            if self.format == 1 :
+                self.receive.insertPlainText(str(pk._get_data())+"\n")
+            else :
+                b = pk._get_data()
+                s = b.hex()
+                self.receive.insertPlainText("   "+s+"\n")
             self.line += 1
 
     def clear(self):
@@ -264,11 +279,13 @@ class DialogTab(Tab, dialog_tab_class):
     def send_pk(self) :
 ####        if (self.the_port != -1) and (self.the_port != -1) :
             t = self.send.text()
-####            logger.info('Pk : {}'.format(t))
+            b = bytearray()
+            b = b.fromhex(t)
+            logger.info('b : {}'.format(b))
             self.echo.append(t)
             self.send.setText("")
             self.pk.set_header(DialogTab.the_port_e, DialogTab.the_channel_e)
-            self.pk._set_data(t)
+            self.pk._set_data(b)
             logger.info('Pk : {}'.format(self.pk))
             logger.info('Pk : {}'.format(str(self.pk._get_port())+" - "))
             logger.info('Pk : {}'.format(str(self.pk._get_channel())+" - "))

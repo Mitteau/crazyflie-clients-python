@@ -22,6 +22,20 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout">
        <item>
+        <widget class="QComboBox" name="format">
+         <item>
+          <property name="text">
+           <string>Bytearray</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Hexa</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="_clearButton">
          <property name="text">
           <string>Clear</string>

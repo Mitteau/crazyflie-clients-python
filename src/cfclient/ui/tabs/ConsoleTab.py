@@ -74,15 +74,29 @@ class ConsoleTab(Tab, console_tab_class):
             self._disconnected_signal.emit)
 
         self._clearButton.clicked.connect(self.clear)
+        self.format.activated.connect(self.change_format)
         self._dumpSystemLoadButton.clicked.connect(
             lambda enabled:
             self._helper.cf.param.set_value("system.taskDump", '1'))
+        self.format = 0
+
+    def change_format(self, i) :
+        self.format = i
 
     def printText(self, text):
         # Make sure we get printouts from the Crazyflie into the log (such as
         # build version and test ok/fail)
-        logger.debug("[%s]", text)
-        self.console.insertPlainText(text)
+        if self.format == 1 :
+            l = len(text)
+            i = 0
+            self.console.insertPlainText("   ")
+            while i < l :
+                j = ord(text[i])
+                self.console.insertPlainText(str(j))
+                i += 1
+            self.console.insertPlainText("\n")
+        else :
+            self.console.insertPlainText(text)
 
     def clear(self):
         self.console.clear()
