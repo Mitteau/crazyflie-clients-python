@@ -58,7 +58,7 @@
           </size>
          </property>
          <property name="currentIndex">
-          <number>16</number>
+          <number>0</number>
          </property>
          <property name="maxVisibleItems">
           <number>20</number>
@@ -141,6 +141,11 @@
          <item>
           <property name="text">
            <string>Port 0xF Link layer</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>NRF link</string>
           </property>
          </item>
          <item>

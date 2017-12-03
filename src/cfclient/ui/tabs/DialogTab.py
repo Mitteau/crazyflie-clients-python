@@ -102,10 +102,11 @@ class DialogTab(Tab, dialog_tab_class):
         self.the_port = -1
         self.the_channel = -1
         self.line = 1
-        self.lines_max = -1
+        self.lines_max = 10
         self.the_direction = 2
         self.speaking = False
         self.format = 0
+        self.no_header = False
 
         self.Q = QWidget(self.tabWidget)
         self.Q.setVisible(False)
@@ -135,6 +136,7 @@ class DialogTab(Tab, dialog_tab_class):
         self.Q_port.addItem("Port 0xD Platform")
         self.Q_port.addItem("Port 0xE Client-side debugging")
         self.Q_port.addItem("Port 0xF Link layer")
+        self.Q_port.addItem("No header")
         self.L_port_channel.addWidget(self.Q_port)
         self.L_channel = QHBoxLayout()
         self.label = QLabel()
@@ -183,11 +185,8 @@ class DialogTab(Tab, dialog_tab_class):
             self.started = True
             i = self.line_number.currentIndex()
             self.change_lines(i)
-####            self.lines_max = -1
-####            self.line_number.setCurrentIndex(4)
 
     def change_lines(self, i) :
-        logger.info('Lines activated {}'.format(i))
         if i == 0 : self.lines_max = 10
         elif i == 1 : self.lines_max = 20
         elif i == 2 : self.lines_max = 80
@@ -211,6 +210,8 @@ class DialogTab(Tab, dialog_tab_class):
         elif i == 13 : self.the_port = 0xD
         elif i == 14 : self.the_port = 0xE
         elif i == 15 : self.the_port = 0xF
+        elif i == 16 : self.the_port = 0xFF
+        elif i == 17 : self.the_port = 0xFE
         else : self.the_port = -1
 
     def change_channel(self, i) :
@@ -233,10 +234,16 @@ class DialogTab(Tab, dialog_tab_class):
 
     def printText(self, pk, into):
         if (self.line > self.lines_max) and (self.lines_max >= 0) : 
-####            logger.info('stoppé')
             self.startButton.setText("Hear")
             self.started = False
-        if (pk._get_port() == self.the_port or self.the_port < 0)\
+        oui = False
+        if pk.header == 0xFF :
+            if self.the_port == 0xFF :
+                oui = True
+            else : oui =False
+        elif pk._get_port() == self.the_port : oui = True
+        else : oui = False
+        if (oui or self.the_port == 0xFE)\
                  and (pk._get_channel() == self.the_channel or self.the_channel < 0)\
                  and (self.line <= self.lines_max or self.lines_max < 0)\
                  and self.started :
@@ -245,8 +252,10 @@ class DialogTab(Tab, dialog_tab_class):
             self.receive.insertPlainText(str(self.line)+" - ")
             if into : self.receive.insertPlainText("IN"+" - ")
             else : self.receive.insertPlainText("OUT"+" - ")
-            self.receive.insertPlainText(str(pk._get_port())+" - ")
-            self.receive.insertPlainText(str(pk._get_channel())+" - ")
+            if pk.header == 0xFF : self.receive.insertPlainText("0xFF"+" - ")
+            else :
+                self.receive.insertPlainText(str(pk._get_port())+" - ")
+                self.receive.insertPlainText(str(pk._get_channel())+" - ")
             if self.format == 1 :
                 self.receive.insertPlainText(str(pk._get_data())+"\n")
             else :
@@ -272,28 +281,21 @@ class DialogTab(Tab, dialog_tab_class):
         else :
             self.send.setEnabled(True)
             self.set_port_channel()
-            logger.info('SPEAKING, port {}, channel {}'.format(DialogTab.the_port_e, DialogTab.the_channel_e))
             self.speaking = True
             self.send.setFocus()
 
     def send_pk(self) :
-####        if (self.the_port != -1) and (self.the_port != -1) :
             t = self.send.text()
             b = bytearray()
             b = b.fromhex(t)
-            logger.info('b : {}'.format(b))
             self.echo.append(t)
             self.send.setText("")
-            self.pk.set_header(DialogTab.the_port_e, DialogTab.the_channel_e)
+            if DialogTab.the_port_e != 0xFF :
+                self.pk.set_header(DialogTab.the_port_e, DialogTab.the_channel_e)
+            else :
+                self.pk.header = 0xFF
             self.pk._set_data(b)
-            logger.info('Pk : {}'.format(self.pk))
-            logger.info('Pk : {}'.format(str(self.pk._get_port())+" - "))
-            logger.info('Pk : {}'.format(str(self.pk._get_channel())+" - "))
-            logger.info('Pk : {}'.format(str(self.pk._get_data())+"\n"))
-            self.sending(self.pk)
-
-    def sending(self, pk) :
-        self._helper.cf.send_packet(pk)
+            self._helper.cf.send_packet(self.pk)
 
 
     @pyqtSlot(int)
@@ -317,16 +319,14 @@ class DialogTab(Tab, dialog_tab_class):
         elif i == 13 : DialogTab.p = 0xD
         elif i == 14 : DialogTab.p = 0xE
         elif i == 15 : DialogTab.p = 0xF
-        logger.info('p choisi {}'.format(DialogTab.p))
+        elif i == 16 : DialogTab.p = 0xFF
 
     def change_channel_e(i) :
         if i < 8 : DialogTab.c = i
-        logger.info('c choisi {}'.format(DialogTab.c))
 
     def close_accept(Q) :
         DialogTab.the_port_e = DialogTab.p
         DialogTab.the_channel_e = DialogTab.c
-        logger.info('Acceptation p = {}, c= {}'.format(DialogTab.the_port_e, DialogTab.the_channel_e))
         Q.close()
 
     def close_abort(Q) :
