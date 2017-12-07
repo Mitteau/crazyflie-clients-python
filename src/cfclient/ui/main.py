@@ -474,7 +474,6 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
     def foundInterfaces(self, interfaces):
         selected_interface = self._selected_interface
-        logger.info('Passage 1, interface {}, nbr interfaces {}'.format(self.selected_interface, len(interfaces)))
         self.interfaceCombo.clear()
         if selected_interface == None and self.isActiveWindow():
             msg = "No interface"
@@ -634,6 +633,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             mems[0].write_data(self._led_write_done)
 
     def _disconnected(self):
+        self.found = True
         self.uiState = UIState.DISCONNECTED
         self._update_ui_state()
 
@@ -903,7 +903,6 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         self.URI = self.URI_0+t
         logger.debug('Adresse changée {}, URI {}'.format(t, self.URI))
         self._selected_interface = self.URI
-        self.interfaceCombo.clear()
         self.interfaceCombo.addItem(INTERFACE_PROMPT_TEXT)
         self.scanButton.setEnabled(True)
         self.found = False

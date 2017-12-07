@@ -45,6 +45,7 @@ import traceback
 import logging
 import shutil
 
+import cfclient
 from . import inputreaders as readers
 from . import inputinterfaces as interfaces
 
@@ -63,13 +64,32 @@ __all__ = ['JoystickReader']
 
 logger = logging.getLogger(__name__)
 
-MAX_THRUST = 65000
-INITIAL_TARGET_HEIGHT = 0.3
+MAX_THRUST = 0xFFFF
+DEAD_BAND_THRUST = .15    #### joystick quality dependant 
+INITIAL_TARGET_HEIGHT = 0.4
 MAX_TARGET_HEIGHT = 1.0
-MIN_TARGET_HEIGHT = 0.03
+MIN_TARGET_HEIGHT = 0.05
 MIN_HOVER_HEIGHT = 0.20
 INPUT_READ_PERIOD = 0.01
-Vz = -.8 # vitesse ascentionnelle m/sec
+Vz = .5 # vitesse ascentionnelle m/sec
+PROFILER = True
+
+SOFT_THRUST = 40.
+SOFT_THRUST_S = 20.
+ST_A = .75 # (1-SOFT_THRUST)/(1-SOFT_THRUST_S)
+ST_B = 25 # 1-ST_A
+ST_A_lim= 1.02
+ST_B_lim = -2
+
+def profile(v) :
+        if v < SOFT_THRUST_S : v = 0.
+        else : v = ST_B + v * ST_A
+        return v
+
+def profile_lim(v) :
+        if v < SOFT_THRUST_S : v = 0.
+        else : v = ST_B_lim + v * ST_A_lim
+        return v
 
 class JoystickReader(object):
     """
@@ -77,6 +97,7 @@ class JoystickReader(object):
     points to the Crazyflie
     """
     inputConfig = []
+    isAssisted = False
 
     ASSISTED_CONTROL_ALTHOLD = 0
     ASSISTED_CONTROL_POSHOLD = 1
@@ -91,6 +112,8 @@ class JoystickReader(object):
         # Set NoMux as default
         self._selected_mux = self._mux[0]
 
+        self.cf_connected = False
+
         self.min_thrust = 0
         self.max_thrust = 0
         self._thrust_slew_rate = 0
@@ -100,10 +123,7 @@ class JoystickReader(object):
 
         self.max_rp_angle = 0
         self.max_yaw_rate = 0
-        try:
-            self.set_assisted_control(Config().get("assistedControl"))
-        except KeyError:
-            self.set_assisted_control(JoystickReader.ASSISTED_CONTROL_ALTHOLD)
+        self.set_assisted_control(JoystickReader.ASSISTED_CONTROL_ALTHOLD)
 
         self._old_thrust = 0
         self._old_raw_thrust = 0
@@ -114,7 +134,6 @@ class JoystickReader(object):
         self.trim_pitch = Config().get("trim_pitch")
 
         self._input_map = None
-        self.isAssisted = False
         self.landing = False
 
         if Config().get("flightmode") is "Normal":
@@ -225,7 +244,7 @@ class JoystickReader(object):
 
     def set_assisted_control(self, mode):
         self._assisted_control = mode
-####        logger.info('mode assisté {}'.format(self._assisted_control)) ####
+####        self._control_limiting(self.isAssisted, mode)
 
     def get_assisted_control(self):
         return self._assisted_control
@@ -356,79 +375,15 @@ class JoystickReader(object):
 
     def _get_thrust_slew_rate(self):
         return self._thrust_slew_rate
-
+        
     def read_input(self):
         """Read input data from the selected device"""
         roll = 0    ####
         pitch = 0    ####
         yawrate = 0    ####
         try:
-            data = self._selected_mux.read()
-            if data:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-####            if data.toggled.assistedControl and data.assistedControl :
-
-                    if self.isAssisted :
-####                        logger.info('non')
-                        for d in self._selected_mux.devices():
-                            d.limit_thrust = True
-                            d.limit_rp = True
-                            self.isAssisted = False
-                        self._target_height = INITIAL_TARGET_HEIGHT
-                  
-                    else :
-####                        logger.info('oui')
-                        self.isAssisted = True
-                        if self._assisted_control == \
-                              JoystickReader.ASSISTED_CONTROL_POSHOLD or \
-                              self._assisted_control == \
-                              JoystickReader.ASSISTED_CONTROL_HOVER:
-                            if self._assisted_control != JoystickReader.ASSISTED_CONTROL_HOVER:
-                                for d in self._selected_mux.devices():
-                                    d.limit_thrust = False
-                                    d.limit_rp = False
-                            else :
-                                for d in self._selected_mux.devices():
-                                    d.limit_thrust = True
-                                    d.limit_rp = False
-
-            try:
-                    ####self.assisted_control_updated.call(
-                    ####                            data.assistedControl)
-                    pass
-
-            except Exception as e:
-                     logger.warning(
-                        "Exception while doing callback from "
-                        "input-device for assisted "
-                        "control: {}".format(e))
-#                            if not data.assistedControl:
-                                # Reset height controller state to initial
-                                # target height both in the UI and in the
-                                # Crazyflie.
-                                # TODO: Implement a proper state update of the
-                                #       input layer
-
-
-
-
-
-
+          data = self._selected_mux.read()
+          if data:
 
 #### Gestion des boutons
             if data.toggled.alt1:
@@ -451,9 +406,9 @@ class JoystickReader(object):
                                        "input-device for alt3: {}".format(e))
 
             if data.toggled.assistedControl :
-                    try: self.assisted_control_updated.call(data.assistedControl)
-                    except Exception as e:
-                        logger.warning("Exception while doing callback from"
+                try: self.assisted_control_updated.call(data.assistedControl)
+                except Exception as e:
+                    logger.warning("Exception while doing callback from"
                                        "assistedControl: {}".format(e))
 
             if data.toggled.connect:
@@ -467,137 +422,105 @@ class JoystickReader(object):
                     self.landing = True
 
             if data.toggled.estop:
-                       try:
-                        self.emergency_stop_updated.call(data.estop)
-                       except Exception as e:
-                        logger.warning("Exception while doing callback from"
+                self.input_updated.call(0, 0, 0, 0)
+                self.max_thrust = 0
+                self.isAssisted = False
+                try:
+                    self.emergency_stop_updated.call(data.estop)
+                except Exception as e:
+                    logger.warning("Exception while doing callback from"
                                        "input-device for estop: {}".format(e))
 
+            if data.toggled.pitchNeg and data.pitchNeg:
+                self.trim_pitch -= 0.2
+            if data.toggled.pitchPos and data.pitchPos:
+                self.trim_pitch += 0.2
+            if data.toggled.rollNeg and data.rollNeg:
+                self.trim_roll -= 0.2
+            if data.toggled.rollPos and data.rollPos:
+                self.trim_roll += 0.2
 
-#### Gestion du type d'assistance
+            if data.toggled.pitchNeg or data.toggled.pitchPos or \
+               data.toggled.rollNeg or data.toggled.rollPos:
+                 self.rp_trim_updated.call(self.trim_roll, self.trim_pitch)
+
+#### Gestion selon type d'assistance
             if self.isAssisted :
-####                pass
-    
+                thrust = JoystickReader.deadband(data.thrust,DEAD_BAND_THRUST)
+                if self._assisted_control == JoystickReader.ASSISTED_CONTROL_ALTHOLD :
+                    roll = data.roll + self.trim_roll
+                    pitch = data.pitch + self.trim_pitch
+                    yawrate = data.yaw
+                    if self.landing : vz = - Vz
+                    else : vz = Vz * thrust
+                    # Integrate velocity setpoint
+                    self._target_height += vz * INPUT_READ_PERIOD
+                    # Cap target height
+                    if self._target_height < MIN_TARGET_HEIGHT:
+                        if self.landing : self._halt()
+                        else :self._target_height = MIN_TARGET_HEIGHT
+                    self.althold_input_updated.call(roll, -pitch,
+                                                           yawrate,
+                                                           self._target_height)
 
+                elif self._assisted_control == JoystickReader.ASSISTED_CONTROL_HEIGHTHOLD :
+                    roll = data.roll + self.trim_roll
+                    pitch = data.pitch + self.trim_pitch
+                    yawrate = data.yaw
+                    if self.landing : vz = -Vz
+                    else : vz = Vz * thrust
+                    # Integrate velocity setpoint
+                    self._target_height += vz * INPUT_READ_PERIOD
+                    # Cap target height
+                    if self._target_height > MAX_TARGET_HEIGHT:
+                        self._target_height = MAX_TARGET_HEIGHT
+                    if self._target_height < MIN_TARGET_HEIGHT:
+                        if self.landing : self._halt()
+                        else : self._target_height = MIN_TARGET_HEIGHT
+                    self.heighthold_input_updated.call(roll, -pitch,
+                                                           yawrate,
+                                                           self._target_height)
+                
+                elif self._assisted_control == JoystickReader.ASSISTED_CONTROL_HOVER :
+                    vy = - JoystickReader.deadband(data.roll,.15) / 2.
+                    vx = JoystickReader.deadband(data.pitch,.15) / 2.
+                    yawrate = data.yaw
+                    if self.landing : vz = - Vz
+                    else : vz = Vz * thrust
+                    # Integrate velocity setpoint
+                    self._target_height += vz * INPUT_READ_PERIOD
+                    # Cap target height
+                    if self._target_height > MAX_TARGET_HEIGHT:
+                        self._target_height = MAX_TARGET_HEIGHT
+                    if self._target_height < MIN_TARGET_HEIGHT:
+                        if self.landing : self._halt()
+                        else : self._target_height = MIN_TARGET_HEIGHT
+                    self.hover_input_updated.call(vx, vy,
+                                                           yawrate,
+                                                           self._target_height)
 
+                else :
+                    self.input_updated.call(0, 0, 0, 0)  ### à vérifier : inutile
 
-
-                # Reset height target when height-hold is not selected
-
-
-#### Calcul des paramètres de vol
-                if self._assisted_control == \
-                            JoystickReader.ASSISTED_CONTROL_POSHOLD \
-                            and self.isAssisted :
-                        vx = data.roll
-                        vy = data.pitch
-                        vz = data.thrust
-                        yawrate = data.yaw
-                        # The odd use of vx and vy is to map forward on the
-                        # physical joystick to positiv X-axis
-                        self.assisted_input_updated.call(vy, -vx, vz, yawrate)
-
-                elif ((self._assisted_control == \
-                            JoystickReader.ASSISTED_CONTROL_HOVER)  or \
-                                (self._assisted_control == \
-                                JoystickReader.ASSISTED_CONTROL_ALTHOLD))\
-                            and self.isAssisted :
-
-                        vx = data.roll
-                        vy = data.pitch
-
-                        # Scale thrust to a value between -1.0 to 1.0
-                        vz = (data.thrust - 32767) / 32767.0
-                        # Integrate velosity setpoint
-                        self._target_height += vz * INPUT_READ_PERIOD
-                        # Cap target height
-                        if self._target_height > MAX_TARGET_HEIGHT:
-                            self._target_height = MAX_TARGET_HEIGHT
-                        if self._target_height < MIN_HOVER_HEIGHT:
-                            self._target_height = MIN_HOVER_HEIGHT
-
-                        yawrate = data.yaw
-                        # The odd use of vx and vy is to map forward on the
-                        # physical joystick to positiv X-axis
-                        if self._assisted_control == \
-                                   JoystickReader.ASSISTED_CONTROL_HOVER :
-                            self.hover_input_updated.call(vy, -vx, yawrate,
-                                                   self._target_height)
-                        elif self._assisted_control == \
-                                  JoystickReader.ASSISTED_CONTROL_ALTHOLD :
-                            self.althold_input_updated.call(self._target_height)
-
-                else:
-                        # Update the user roll/pitch trim from device
-                        if data.toggled.pitchNeg and data.pitchNeg:
-                            self.trim_pitch -= 0.2
-                        if data.toggled.pitchPos and data.pitchPos:
-                            self.trim_pitch += 0.2
-                        if data.toggled.rollNeg and data.rollNeg:
-                            self.trim_roll -= 0.2
-                        if data.toggled.rollPos and data.rollPos:
-                            self.trim_roll += 0.2
-
-                        if data.toggled.pitchNeg or data.toggled.pitchPos or \
-                                data.toggled.rollNeg or data.toggled.rollPos:
-                            self.rp_trim_updated.call(self.trim_roll,
-                                                      self.trim_pitch)
-
-                        if self._assisted_control == \
-                                JoystickReader.ASSISTED_CONTROL_HEIGHTHOLD \
-                                and self.isAssisted :
-                            roll = data.roll + self.trim_roll
-                            pitch = data.pitch + self.trim_pitch
-                            yawrate = data.yaw
-                            # Scale thrust to a value between -1.0 to 1.0
-
-####                    logger.info('landingt {}'.format(self._target_height))
-                        # Integrate velocity setpoint
-                        if not self.landing :
-                            hc = JoystickReader.deadband(data.height_control, .2)
-                            # Integrate velocity setpoint
-                            vz = hc * Vz
-                        else : vz = Vz
-
-                        self._target_height += vz * INPUT_READ_PERIOD
-                    
-                        if self._target_height < .05 :
-                                self.isAssisted = False
-                                self._target_height = INITIAL_TARGET_HEIGHT
-                            
-####                        logger.info('vz {}, landing {}, height = {}'.format(vz,self.landing,self._target_height))        
-
-
-                        # Cap target height
-                        if self._target_height > MAX_TARGET_HEIGHT:
-                                self._target_height = MAX_TARGET_HEIGHT
-                        if self._target_height < MIN_TARGET_HEIGHT:
-                                self._target_height = MIN_TARGET_HEIGHT
-                        self.heighthold_input_updated.call(roll, -pitch,
-                                                               yawrate,
-                                                               self._target_height)
-
-            if self.isAssisted : #### pas d'assistance
-                data.thrust = JoystickReader.p2t(data.thrust)
-
-
-####            else:
-                        # Using alt hold the data is not in a percentage
-####                        if not self.isAssisted :
-####                            data.thrust = JoystickReader.p2t(data.thrust)
-####
-                 # Thrust might be <0 here, make sure it's not otherwise
-                 # we'll get an error.
+            else: #### vol normal, sans assistance
+                roll = data.roll + self.trim_roll
+                pitch = data.pitch + self.trim_pitch
+                yawrate = data.yaw
+                # Scale thrust to a value between -1.0 to 1.0
+                dtt = data.thrust
+                if PROFILER :
+                    dtt = profile(dtt)
+                    lim_t = profile_lim(self.max_thrust)
+                    if dtt > lim_t : dtt = lim_t
+                data.thrust = JoystickReader.p2t(dtt)
                 if data.thrust < 0:
                      data.thrust = 0
-                if data.thrust > 0xFFFF:
-                     data.thrust = 0xFFFF
-
+                if data.thrust > MAX_THRUST:
+                     data.thrust = MAX_THRUST
                 self.input_updated.call(data.roll + self.trim_roll,
                                          data.pitch + self.trim_pitch,
                                          data.yaw, data.thrust)
-####            else:
-####                self.input_updated.call(0, 0, 0, 0)
+
         except Exception:
             logger.warning("Exception while reading inputdevice: %s",
                            traceback.format_exc())
@@ -606,19 +529,65 @@ class JoystickReader(object):
             self.input_updated.call(0, 0, 0, 0)
             self._read_timer.stop()
 
+    def connected(self):
+        self.cf_connected = True
+
+    def disconnected(self):
+        self.cf_connected = False
+
+    def _control_limiting(self, assist, case) :
+        if assist : 
+            if case == JoystickReader.ASSISTED_CONTROL_ALTHOLD :
+                for d in self._selected_mux.devices():
+                    d.limit_thrust = False
+                    d.limit_rp = True
+            elif case == JoystickReader.ASSISTED_CONTROL_POSHOLD :
+                for d in self._selected_mux.devices():
+                    d.limit_thrust = False
+                    d.limit_rp = False
+            elif case == JoystickReader.ASSISTED_CONTROL_HEIGHTHOLD :
+                for d in self._selected_mux.devices():
+                    d.limit_thrust = False
+                    d.limit_rp = True
+            elif case == JoystickReader.ASSISTED_CONTROL_HOVER :
+                for d in self._selected_mux.devices():
+                    d.limit_thrust = False
+                    d.limit_rp = False
+        else :
+            for d in self._selected_mux.devices():
+                d.limit_thrust = True
+                d.limit_rp = True
+
+    def assisted_set_local(self, value) :
+        self.isAssisted = value
+        self._control_limiting(self.isAssisted , self.get_assisted_control())
+        if value :
+            self._target_height = INITIAL_TARGET_HEIGHT
+            self.landing = False
+
+    def _halt(self) :
+        self.input_updated.call(0, 0, 0, 0)
+        self.assisted_set_local(False)
+        try: self.assisted_control_updated.call(True)
+        except Exception as e:
+                        logger.warning("Exception while doing callback from"
+                                       "assistedControl: {}".format(e))
+        
     @staticmethod
     def p2t(percentage):
         """Convert a percentage to raw thrust"""
         return int(MAX_THRUST * (percentage / 100.0))
 
-    thrust_slew_rate = property(_get_thrust_slew_rate, _set_thrust_slew_rate)
-    
     def deadband(value, threshold):
         if abs(value) < threshold:
-            value = 0
-        elif value > 0:
+            value = 0.
+        elif value > 0.:
             value -= threshold
-        elif value < 0:
+        elif value < 0.:
             value += threshold
-        return value / (1 - threshold)
+        return value / (1. - threshold)
 
+
+
+    thrust_slew_rate = property(_get_thrust_slew_rate, _set_thrust_slew_rate)
+    

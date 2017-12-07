@@ -65,9 +65,6 @@ JSIOCGBUTTONS = 0x80016a12
 MODULE_MAIN = "Joystick"
 MODULE_NAME = "linuxjsdev"
 
-PROFILER = False
-
-
 class JEvent(object):
     """
     Joystick event class. Encapsulate single joystick event.
@@ -96,7 +93,6 @@ def profile(self, n, v) : # joypad axis resting at -32768
             if v < -1. + SOFT_THRUST_S : v = 0.
             else : v = ST_B + v * ST_A
         return v
-
 
 class _JS():
 
@@ -153,12 +149,9 @@ class _JS():
             self.__updatestate(jsdata)
 
     def __updatestate(self, jsdata):
-        """Update the internal absolute state of buttons and axes"""
+        """Update the internal absolute state of buttons and axes, axes between 1 and -1"""
         if jsdata[JE_TYPE] & JS_EVENT_AXIS != 0:
             self.axes[jsdata[JE_NUMBER]] = jsdata[JE_VALUE] / 32768.0
-            if PROFILER : self.axes[jsdata[JE_NUMBER]] = profile(self, jsdata[JE_NUMBER], jsdata[JE_VALUE] / 32768.0)
-#            else self.axes[jsdata[JE_NUMBER]] = jsdata[JE_VALUE]
-            else : self.axes[jsdata[JE_NUMBER]] = jsdata[JE_VALUE] / 32768.0
         elif jsdata[JE_TYPE] & JS_EVENT_BUTTON != 0:
             self.buttons[jsdata[JE_NUMBER]] = jsdata[JE_VALUE]
 
