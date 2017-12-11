@@ -37,7 +37,7 @@ from cfclient.utils.input import JoystickReader
 from cflib.crazyflie import Crazyflie
 
 if os.name == 'posix':
-    print('Disabling standard output for libraries!')
+    print('Désactivation des sorties standard des librairies !')
     stdout = os.dup(1)
     os.dup2(os.open('/dev/null', os.O_WRONLY), 1)
     sys.stdout = os.fdopen(stdout, 'w')
@@ -70,12 +70,12 @@ class HeadlessClient():
         """Set up the device reader"""
         # Set up the joystick reader
         self._jr.device_error.add_callback(self._input_dev_error)
-        print("Client side X-mode: %s" % xmode)
+        print("X mode, côté client : %s" % xmode)
         if (xmode):
             self._cf.commander.set_client_xmode(xmode)
 
         devs = self._jr.available_devices()  # noqa, is this a bug?
-        print("Will use [%s] for input" % self._devs[input_device])
+        print("Utilisation de [%s] pour l\'entrée des commandes" % self._devs[input_device])
         self._jr.start_input(self._devs[input_device])
         self._jr.set_input_map(self._devs[input_device], input_config)
 
@@ -85,10 +85,10 @@ class HeadlessClient():
 
     def list_controllers(self):
         """List the available controllers and input mapping"""
-        print("\nAvailable controllers:")
+        print("\nContrôleurs existants :")
         for i, dev in enumerate(self._devs):
-            print(" - Controller #{}: {}".format(i, dev))
-        print("\nAvailable input mapping:")
+            print(" - contrôleurs #{}: {}".format(i, dev))
+        print("\nProfils de contrôleurs existants :")
         for map in os.listdir(cfclient.config_path + '/input'):
             print(" - " + map.split(".json")[0])
 
@@ -110,16 +110,16 @@ class HeadlessClient():
 
     def _connected(self, link):
         """Callback for a successful Crazyflie connection."""
-        print("Connected to {}".format(link))
+        print("Connecté à {}".format(link))
 
     def _connection_failed(self, link, message):
         """Callback for a failed Crazyflie connection"""
-        print("Connection failed on {}: {}".format(link, message))
+        print("Échec de la connexion sur {}: {}".format(link, message))
         sys.exit(-1)
 
     def _input_dev_error(self, message):
         """Callback for an input device error"""
-        print("Error when reading device: {}".format(message))
+        print("Erreur dans la lecture du périphérique : {}".format(message))
         sys.exit(-1)
 
 
@@ -129,25 +129,25 @@ def main():
 
     parser = argparse.ArgumentParser(prog="cfheadless")
     parser.add_argument("-u", "--uri", action="store", dest="uri", type=str,
-                        default="radio://0/10/250K",
-                        help="URI to use for connection to the Crazyradio"
-                             " dongle, defaults to radio://0/10/250K")
+                        default="radio://0/80/250K",
+                        help="URI à utiliser pour la connexion à la clé de Crazyradio"
+                             ", defauts : radio://0/80/250K")
     parser.add_argument("-i", "--input", action="store", dest="input",
-                        type=str, default="PS3_Mode_1",
-                        help="Input mapping to use for the controller,"
-                             "defaults to PS3_Mode_1")
+                        type=str, default="xbox360_nexon",
+                        help="profil à utiliser pour le contrôleur,"
+                             "defauts : xbox360_nexon")
     parser.add_argument("-d", "--debug", action="store_true", dest="debug",
-                        help="Enable debug output")
+                        help="activer la sortie de débogage")
     parser.add_argument("-c", "--controller", action="store", type=int,
                         dest="controller", default=0,
-                        help="Use controller with specified id,"
+                        help="Utiliser le contrôleur avec une ID spécifique,"
                              " id defaults to 0")
     parser.add_argument("--controllers", action="store_true",
                         dest="list_controllers",
-                        help="Only display available controllers and exit")
+                        help="Affichage seulement des contrôleurs puis sortie")
     parser.add_argument("-x", "--x-mode", action="store_true",
                         dest="xmode",
-                        help="Enable client-side X-mode")
+                        help="Activer X-mode côté client")
     (args, unused) = parser.parse_known_args()
 
     if args.debug:
@@ -166,7 +166,7 @@ def main():
                                       xmode=args.xmode)
             headless.connect_crazyflie(link_uri=args.uri)
         else:
-            print("No input-device connected, exiting!")
+            print("Pas d\'appareil d\'entrée connecté, sortie !")
 
 
 if __name__ == "__main__":

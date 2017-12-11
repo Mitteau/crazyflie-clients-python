@@ -67,7 +67,7 @@
           </font>
          </property>
          <property name="title">
-          <string>Basic Flight Control</string>
+          <string>Contrôle de base des vols</string>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
@@ -113,7 +113,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Pitch Trim</string>
+               <string>Trim de tangage</string>
               </property>
              </widget>
             </item>
@@ -134,7 +134,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Flight mode</string>
+               <string>Mode de vol</string>
               </property>
              </widget>
             </item>
@@ -169,7 +169,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Roll Trim</string>
+               <string>Trim de roulis</string>
               </property>
              </widget>
             </item>
@@ -217,7 +217,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Assist mode</string>
+               <string>Mode d'assistance</string>
               </property>
              </widget>
             </item>
@@ -235,7 +235,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Crazyflie X-mode</string>
+               <string>X-mode Crazyflie</string>
               </property>
              </widget>
             </item>
@@ -287,7 +287,7 @@
               </item>
               <item>
                <property name="text">
-                <string>Advanced</string>
+                <string>Expert</string>
                </property>
               </item>
              </widget>
@@ -306,7 +306,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Client X-mode</string>
+               <string>X-mode client</string>
               </property>
              </widget>
             </item>
@@ -324,7 +324,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Attitude control</string>
+               <string>Coontrôle d'attitude</string>
               </property>
               <property name="checked">
                <bool>true</bool>
@@ -345,7 +345,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Rate control</string>
+               <string>Contrôle en vitesse</string>
               </property>
              </widget>
             </item>
@@ -363,7 +363,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Assisted flight</string>
+               <string>Vol assisté</string>
               </property>
               <property name="checkable">
                <bool>true</bool>
@@ -403,7 +403,7 @@
           </font>
          </property>
          <property name="title">
-          <string>Advanced Flight Control</string>
+          <string>Contrôle expert des vols</string>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <property name="topMargin">
@@ -424,7 +424,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Max thrust (%)</string>
+               <string>Poussée maximum (%)</string>
               </property>
              </widget>
             </item>
@@ -441,7 +441,7 @@
                <enum>Qt::LeftToRight</enum>
               </property>
               <property name="text">
-               <string>Max angle/rate</string>
+               <string>RT angle/vitesse maximum</string>
               </property>
              </widget>
             </item>
@@ -455,7 +455,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Min thrust (%)</string>
+               <string>Poussée minimum (%)</string>
               </property>
              </widget>
             </item>
@@ -469,7 +469,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Thrust lowering slewrate (%/sec)</string>
+               <string>Taux de diminution de la poussée (%/sec)</string>
               </property>
               <property name="wordWrap">
                <bool>true</bool>
@@ -486,7 +486,7 @@
                </font>
               </property>
               <property name="text">
-               <string>SlewLimit (%)</string>
+               <string>Limite du dérapage (%)</string>
               </property>
              </widget>
             </item>
@@ -500,7 +500,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Max Yaw angle/rate</string>
+               <string>Angle/vitesse maximum en roulis</string>
               </property>
              </widget>
             </item>
@@ -657,7 +657,7 @@
           </font>
          </property>
          <property name="title">
-          <string>Expansion boards</string>
+          <string>Modules d'extension</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_6">
           <property name="leftMargin">
@@ -722,7 +722,7 @@
                </font>
               </property>
               <property name="text">
-               <string>LED-ring effect</string>
+               <string>Effet de l'anneau des LEDs</string>
               </property>
              </widget>
             </item>
@@ -768,7 +768,7 @@
                </font>
               </property>
               <property name="text">
-               <string>LED headlights</string>
+               <string>Phares</string>
               </property>
              </widget>
             </item>
@@ -787,7 +787,7 @@
                  </font>
                 </property>
                 <property name="text">
-                 <string>all sounds</string>
+                 <string>Tous les sons</string>
                 </property>
                </widget>
               </item>
@@ -820,7 +820,7 @@
                  </font>
                 </property>
                 <property name="text">
-                 <string>Sounds: </string>
+                 <string>Sons</string>
                 </property>
                </widget>
               </item>
@@ -925,7 +925,7 @@
                </font>
               </property>
               <property name="text">
-               <string> Emergency</string>
+               <string>Arrêt d'urgence</string>
               </property>
              </widget>
             </item>
@@ -977,7 +977,7 @@
                </font>
               </property>
               <property name="text">
-               <string>(double click to reset)</string>
+               <string>(click double pour relance)</string>
               </property>
              </widget>
             </item>
@@ -1039,7 +1039,7 @@
           </font>
          </property>
          <property name="title">
-          <string>Flight Data</string>
+          <string>Données du vol</string>
          </property>
          <layout class="QGridLayout" name="gridLayout">
           <item row="0" column="0">
@@ -1071,7 +1071,7 @@
                  </font>
                 </property>
                 <property name="text">
-                 <string>Height</string>
+                 <string>Hauteur</string>
                 </property>
                </widget>
               </item>
@@ -1122,7 +1122,7 @@
                  </font>
                 </property>
                 <property name="text">
-                 <string>Thrust</string>
+                 <string>Poussée</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -1148,8 +1148,16 @@
               </item>
               <item row="0" column="2">
                <widget class="QLabel" name="label_14">
+                <property name="font">
+                 <font>
+                  <family>DejaVu Sans</family>
+                  <weight>50</weight>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
                 <property name="text">
-                 <string>Target</string>
+                 <string>Objectif</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -1208,7 +1216,7 @@
                  </font>
                 </property>
                 <property name="text">
-                 <string>Thrust</string>
+                 <string>Poussée</string>
                 </property>
                </widget>
               </item>
@@ -1236,7 +1244,7 @@
                  </font>
                 </property>
                 <property name="text">
-                 <string>Roll</string>
+                 <string>Roulis</string>
                 </property>
                </widget>
               </item>
@@ -1299,7 +1307,7 @@
                  </font>
                 </property>
                 <property name="text">
-                 <string>Pitch</string>
+                 <string>Tangage</string>
                 </property>
                </widget>
               </item>
@@ -1313,7 +1321,7 @@
                  </font>
                 </property>
                 <property name="text">
-                 <string>Actual</string>
+                 <string>Réalisé</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -1407,7 +1415,7 @@
                  </font>
                 </property>
                 <property name="text">
-                 <string>Yaw</string>
+                 <string>Lacet</string>
                 </property>
                </widget>
               </item>

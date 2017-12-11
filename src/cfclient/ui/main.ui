@@ -83,7 +83,7 @@
         <item row="0" column="10">
          <widget class="QLabel" name="linkQualityLabel">
           <property name="text">
-           <string>Link Quality:</string>
+           <string>Qualité de la liaison</string>
           </property>
          </widget>
         </item>
@@ -96,7 +96,7 @@
            </size>
           </property>
           <property name="text">
-           <string>Connect</string>
+           <string>Connecter</string>
           </property>
          </widget>
         </item>
@@ -109,14 +109,14 @@
            </size>
           </property>
           <property name="text">
-           <string>Scan</string>
+           <string>Balayer</string>
           </property>
          </widget>
         </item>
         <item row="0" column="4">
          <widget class="QLabel" name="batteryLabel">
           <property name="text">
-           <string>Battery:</string>
+           <string>Batterie :</string>
           </property>
          </widget>
         </item>
@@ -223,7 +223,7 @@
       </item>
       <item>
        <widget class="QWidget" name="widget" native="true">
-        <layout class="QHBoxLayout" stretch="0,0,0,0,0,1">
+        <layout class="QHBoxLayout" stretch="0,0,0,0,0,0">
          <property name="spacing">
           <number>0</number>
          </property>
@@ -242,7 +242,7 @@
          <item>
           <widget class="QLabel" name="addressLabel">
            <property name="text">
-            <string>  Address:</string>
+            <string>  Adresse :</string>
            </property>
           </widget>
          </item>
@@ -276,7 +276,7 @@
           <widget class="QPushButton" name="confirm_address">
            <property name="minimumSize">
             <size>
-             <width>50</width>
+             <width>70</width>
              <height>0</height>
             </size>
            </property>
@@ -287,7 +287,20 @@
             </size>
            </property>
            <property name="text">
-            <string>Confirm</string>
+            <string>Confirmer</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="autoReconnectCheckBox">
+           <property name="mouseTracking">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Reconnexion automatique</string>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -303,19 +316,6 @@
             </size>
            </property>
           </spacer>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="autoReconnectCheckBox">
-           <property name="mouseTracking">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>Auto Reconnect</string>
-           </property>
-           <property name="checked">
-            <bool>false</bool>
-           </property>
-          </widget>
          </item>
         </layout>
        </widget>
@@ -410,18 +410,18 @@
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
-     <string>View</string>
+     <string>Afficher</string>
     </property>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>Help</string>
+     <string>Aide</string>
     </property>
     <addaction name="menuItemAbout"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
-     <string>Settings</string>
+     <string>Réglages</string>
     </property>
     <addaction name="logConfigAction"/>
     <addaction name="separator"/>
@@ -429,7 +429,7 @@
    </widget>
    <widget class="QMenu" name="menuConnect">
     <property name="title">
-     <string>Connect</string>
+     <string>Connexion</string>
     </property>
     <addaction name="menuItemConnect"/>
     <addaction name="menuItemBootloader"/>
@@ -438,7 +438,7 @@
    </widget>
    <widget class="QMenu" name="_menu_inputdevice">
     <property name="title">
-     <string>Input device</string>
+     <string>Disp. entrée</string>
     </property>
     <addaction name="menuItemConfInputDevice"/>
     <addaction name="_menuitem_rescandevices"/>
@@ -459,7 +459,7 @@
   </action>
   <action name="menuItemExit">
    <property name="text">
-    <string>Exit Ctrl+q</string>
+    <string>Quitter</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
@@ -499,7 +499,7 @@
   </action>
   <action name="menuItemAbout">
    <property name="text">
-    <string>About</string>
+    <string>À propos de</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>
@@ -567,7 +567,7 @@
   </action>
   <action name="_menuItem_openconfigfolder">
    <property name="text">
-    <string>Open config folder</string>
+    <string>Ouvrir le dossier de configuration</string>
    </property>
   </action>
   <action name="_menu_cf2_config">
@@ -588,7 +588,7 @@
   </action>
   <action name="_menu_cf1_config">
    <property name="text">
-    <string>Configure 1.0</string>
+    <string>Configurer 1.0</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>

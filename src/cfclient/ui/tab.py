@@ -62,8 +62,8 @@ class Tab(QtWidgets.QWidget):
                 if (len(s) > 0):
                     s += ","
             except Exception:
-                logger.warning("Exception while adding tab to config and "
-                               "reading tab config")
+                logger.warning("Exception dans l'ajout d'un onglet à la configuration et "
+                               "dans la lecture de la configuration de l'onglet")
             # Check this since tabs in config are opened when app is started
             if (self.tabName not in s):
                 s += "%s" % self.tabName
@@ -74,8 +74,8 @@ class Tab(QtWidgets.QWidget):
             try:
                 parts = Config().get("open_tabs").split(",")
             except Exception:
-                logger.warning("Exception while removing tab from config and "
-                               "reading tab config")
+                logger.warning("Exception dans la suppression d'un onglet de la configuration et "
+                               "dans la lecture de la configuration de l'onglet")
                 parts = []
             s = ""
             for p in parts:

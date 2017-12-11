@@ -74,7 +74,7 @@ def main():
         b_path = os.environ['HOME']+LOG_DIRECTORY
         d_path = b_path+"/crazyflie-logs/"
         l = list(os.walk(b_path))[0][1]
-        if not "crazyflie_logs" in l : os.system('mkdir '+d_path)
+        if not "crazyflie-logs" in l : os.system('mkdir '+d_path)
         filename = d_path+"debug-%s.log" % datetime.datetime.now()  ####
         
         filehandler = logging.FileHandler(filename)
@@ -90,27 +90,27 @@ def main():
 
     logger = logging.getLogger(__name__)
 
-    logger.debug("Using config path {}".format(cfclient.config_path))
+    logger.debug("Chemin d\' accès à la configuration {}".format(cfclient.config_path))
     logger.debug("sys.path={}".format(sys.path))
 
     # Try all the imports used in the project here to control what happens....
     try:
         import usb  # noqa
     except ImportError:
-        logger.critical("No pyusb installation found, exiting!")
+        logger.critical("Pas de \"pyusb\" installé, sortie !")
         sys.exit(1)
 
     if not sys.platform.startswith('linux'):
         try:
             import sdl2  # noqa
         except ImportError:
-            logger.critical("No pysdl2 installation found, exiting!")
+            logger.critical("Pas de \"pysdl2\" installé, sortie !")
             sys.exit(1)
 
     try:
         import PyQt5  # noqa
     except ImportError:
-        logger.critical("No PyQT5 installation found, exiting!")
+        logger.critical("Pas de \"PyQt5\" installé, sortie !")
         sys.exit(1)
 
     # Disable printouts from STL
@@ -118,13 +118,13 @@ def main():
         stdout = os.dup(1)
         os.dup2(os.open('/dev/null', os.O_WRONLY), 1)
         sys.stdout = os.fdopen(stdout, 'w')
-        logger.info("Disabling STL printouts")
+        logger.info("Désactivation des sorties STL")
 
     if os.name == 'nt':
         stdout = os.dup(1)
         os.dup2(os.open('NUL', os.O_WRONLY), 1)
         sys.stdout = os.fdopen(stdout, 'w')
-        logger.info("Disabling STL printouts")
+        logger.info("Désactivation des sorties STL")
 
     if sys.platform == 'darwin':
         try:
@@ -136,8 +136,7 @@ def main():
                 if info:
                     info['CFBundleName'] = 'Crazyflie'
         except ImportError:
-            logger.info("Foundation not found. Menu will show python as "
-                        "application name")
+            logger.info("Base non trouvée. Le menu indiquera Python comme nom de l'application")
 
     # Start up the main user-interface
     from .ui.main import MainUI

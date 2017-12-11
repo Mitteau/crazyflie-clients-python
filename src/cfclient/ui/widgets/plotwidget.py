@@ -150,10 +150,10 @@ class PlotWidget(QtWidgets.QWidget, plot_widget_class):
         ma_vue.setMouseEnabled(x=False, y=True)
         ma_vue.setMouseMode(ViewBox.PanMode)
         mon_axe=AxisItem("bottom", linkView=ma_vue) ####
-#        mon_axe.linkToView(ma_vue)
-        logging.info("lien vue {}".format(ma_vue))
+####        mon_axe.linkToView(ma_vue)
+####        logging.info("lien vue {}".format(ma_vue))
         mon_axe.setGrid(255)
-#        self._plot_widget.getViewBox().XAxis.setGrid(100) ####
+####        self._plot_widget.getViewBox().XAxis.setGrid(100) ####
 
 
 

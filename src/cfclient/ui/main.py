@@ -76,7 +76,7 @@ __all__ = ['MainUI']
 
 logger = logging.getLogger(__name__)
 
-INTERFACE_PROMPT_TEXT = 'Select an interface'
+INTERFACE_PROMPT_TEXT = 'Selectionner une interface'
 
 (main_window_class,
  main_windows_base_class) = (uic.loadUiType(cfclient.module_path +
@@ -124,7 +124,6 @@ class MonDialog(object):
         self.datas, self.sender = datas,  sender
         Dialog.setWindowModality(QtCore.Qt.WindowModal)
         Dialog.setMinimumWidth(0)
-        ####Dialog.resize(150, 80)
         self.gridLayout = QtGui.QGridLayout(Dialog)
         self.verticalLayout = QtGui.QVBoxLayout()
         self.label = QtGui.QLabel(Dialog)
@@ -137,8 +136,6 @@ class MonDialog(object):
         self.process()
 
     def process(self):
-####        chain = " ".join([d for d in self.datas])
-####        chain = "<tiny>"+self.datas+"</tiny>"
         chain = self.datas
         self.label.setText(chain)
 
@@ -189,13 +186,13 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         if platform.system() == 'Darwin':
 
             (Version, junk, machine) = platform.mac_ver()
-            logger.info("This is a MAC - checking if we can apply Progress "
-                        "Bar Stylesheet for Yosemite Skinny Bars ")
+            logger.info("Ceci est un MAC - vérifier si nous pouvons appliquer"
+                  "la feuille de style Progress Bar pour le \"Yosemite Skinny Bars\"")
             yosemite = (10, 10, 0)
             tVersion = tuple(map(int, (Version.split("."))))
 
             if tVersion >= yosemite:
-                logger.info("Found Yosemite - applying stylesheet")
+                logger.info("Yosemite trouvé - Application de la feuille de style")
 
                 tcss = """
                     QProgressBar {
@@ -210,7 +207,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                 self.setStyleSheet(tcss)
 
             else:
-                logger.info("Pre-Yosemite - skinny bar stylesheet not applied")
+                logger.info("Pre-Yosemite - la feuille de style \"Skinny Bars\" ne sera pas appliquée")
 
         ######################################################
 
@@ -231,8 +228,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         self.scanner.start()
 
         # Create and start the Input Reader
-        self._statusbar_label = QLabel("No input-device found, insert one to"
-                                       " fly.")
+        self._statusbar_label = QLabel("Pas de périphérique d'entrée trouvé, en insérer un pour pouvoir voler.")
         self.statusBar().addWidget(self._statusbar_label)
 
         self.joystickReader = JoystickReader()
@@ -281,7 +277,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         try:
             self.URI = Config().get("link_uri")
         except Exception as e:
-            logger.warning("Exception while retrieving URI [{}]".format(e))
+            logger.warning("Exception pendant récupération de l'URI [{}]".format(e))
         if len(self.URI) > 0 :
             address=re.sub("[\d,A-F]{10}$","",self.URI)
             address=re.sub(address,"",self.URI)
@@ -399,10 +395,10 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                     # Toggle though menu so it's also marked as open there
                     t.toggle()
         except Exception as e:
-            logger.warning("Exception while opening tabs [{}]".format(e))
+            logger.warning("Exception pendant ouverture des tabs [{}]".format(e))
 
         # Loading toolboxes (A bit of magic for a lot of automatic)
-        self.toolboxesMenuItem = QMenu("Toolboxes", self.menuView,
+        self.toolboxesMenuItem = QMenu("Boîtes à outils", self.menuView,
                                        enabled=True)
         self.menuView.addMenu(self.toolboxesMenuItem)
 
@@ -461,12 +457,12 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
         if (not (Config().get("analog"))):
             abandon=QPushButton()
-            abandon.setText("Exit")
+            abandon.setText("Sortie")
             avertissement_l = QMessageBox()
-            avertissement_l.setWindowTitle("Joystick")
-            avertissement_l.setText("Warning")
-            avertissement_l.setInformativeText("Is joystick correctly configured?")
-            avertissement_l.addButton("Yes",avertissement_l.AcceptRole)
+            avertissement_l.setWindowTitle("Manette")
+            avertissement_l.setText("Attention !")
+            avertissement_l.setInformativeText("La manette est-elle correctement configurée ?")
+            avertissement_l.addButton("Oui, avertissement_l.AcceptRole")
             avertissement_l.addButton(abandon,avertissement_l.DestructiveRole)
             avertissement_l.setIcon(avertissement_l.Critical)
             abandon.clicked.connect(self.closeAppRequest)
@@ -476,16 +472,16 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         selected_interface = self._selected_interface
         self.interfaceCombo.clear()
         if selected_interface == None and self.isActiveWindow():
-            msg = "No interface"
-            warningCaption = "Link"
+            msg = "Aucune interface"
+            warningCaption = "Liaison"
             QMessageBox.critical(self, warningCaption, msg)
 
         else :
             if len(interfaces) < 1 and self.isActiveWindow() :
                 self.interfaceCombo.addItem(INTERFACE_PROMPT_TEXT)
                 if self.isActiveWindow():
-                    msg = "No cf2 at address:"+str(hex(self.add))
-                    warningCaption = "Link"
+                    msg = "Pas de cf2 à l\'adresse :"+str(hex(self.add))
+                    warningCaption = "Liaison"
                     QMessageBox.critical(self, warningCaption, msg)
                 self.found = False
                 
@@ -500,15 +496,15 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
     def _update_ui_state(self):
         if self.uiState == UIState.DISCONNECTED:
-            self.setWindowTitle("Not connected")
+            self.setWindowTitle("Non connecté")
             canConnect = self.found ####_selected_interface is not None
-            self.menuItemConnect.setText("Connect to Crazyflie")
+            self.menuItemConnect.setText("Connecter au Crazyflie")
             self.menuItemConnect.setEnabled(canConnect)
-            self.connectButton.setText("Connect")
+            self.connectButton.setText("Connexion")
             self.connectButton.setToolTip(
-                "Connect to the Crazyflie on the selected interface")
+                "Connecter au Crazyflie sur l'interface sélectionnée")
             self.connectButton.setEnabled(canConnect)
-            self.scanButton.setText("Scan")
+            self.scanButton.setText("Balayage")
             self.scanButton.setEnabled(True)
             self.address.setEnabled(True)
             self.batteryBar.setValue(3000)
@@ -520,12 +516,12 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             self.interfaceCombo.setEnabled(True)
             self.confirm_address.setEnabled(True)
         elif self.uiState == UIState.CONNECTED:
-            s = "Connected on %s" % self._selected_interface
+            s = "Connecté par %s" % self._selected_interface
             self.setWindowTitle(s)
-            self.menuItemConnect.setText("Disconnect")
+            self.menuItemConnect.setText("Déconnecter")
             self.menuItemConnect.setEnabled(True)
-            self.connectButton.setText("Disconnect")
-            self.connectButton.setToolTip("Disconnect from the Crazyflie")
+            self.connectButton.setText("Déconnecter")
+            self.connectButton.setToolTip("Déconnecter du Crazyflie")
             self.scanButton.setEnabled(False)
             self.logConfigAction.setEnabled(True)
             # Find out if there's an I2C EEPROM, otherwise don't show the
@@ -535,24 +531,24 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             self._menu_cf1_config.setEnabled(False)
             self.confirm_address.setEnabled(False)
         elif self.uiState == UIState.CONNECTING:
-            s = "Connecting to {} ...".format(self._selected_interface)
+            s = "Connexion en cours vers {} ...".format(self._selected_interface)
             self.setWindowTitle(s)
-            self.menuItemConnect.setText("Cancel")
+            self.menuItemConnect.setText("Annuler")
             self.menuItemConnect.setEnabled(True)
-            self.connectButton.setText("Cancel")
-            self.connectButton.setToolTip("Cancel connecting to the Crazyflie")
+            self.connectButton.setText("Annuler")
+            self.connectButton.setToolTip("Annuler la connexion au Crazyflie")
             self.scanButton.setEnabled(False)
             self.address.setEnabled(False)
             self.menuItemBootloader.setEnabled(False)
             self.interfaceCombo.setEnabled(False)
             self.confirm_address.setEnabled(False)
         elif self.uiState == UIState.SCANNING:
-            self.setWindowTitle("Scanning ...")
-            self.connectButton.setText("Connect")
+            self.setWindowTitle("Balayage en cours ...")
+            self.connectButton.setText("Connecter")
             self.menuItemConnect.setEnabled(False)
-            self.connectButton.setText("Connect")
+            self.connectButton.setText("Connecter")
             self.connectButton.setEnabled(False)
-            self.scanButton.setText("Scanning...")
+            self.scanButton.setText("Balayage en cours ...")
             self.scanButton.setEnabled(False)
             self.address.setEnabled(False)
             self.menuItemBootloader.setEnabled(False)
@@ -576,7 +572,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             menuItem.setChecked(False)
 
     def _rescan_devices(self):
-        self._statusbar_label.setText("No inputdevice connected!")
+        self._statusbar_label.setText("pas de périphérique d'entrée connecté !")
         self._menu_devices.clear()
         self._active_device = ""
         self.joystickReader.stop_input()
@@ -588,7 +584,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
     def _auto_reconnect_changed(self, checked):
         self._auto_reconnect_enabled = checked
         Config().set("auto_reconnect", checked)
-        logger.info("Auto reconnect enabled: {}".format(checked))
+        logger.info("Reconnexion automatique activée : {}".format(checked))
 
     def _show_connect_dialog(self):
         self.logConfigDialogue.show()
@@ -617,7 +613,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             s = re.sub("/[\d,A-F]{10}$","",s)
         Config().set("link_uri", str(s))
 
-        lg = LogConfig("Battery", 1000)
+        lg = LogConfig("Batterie", 1000)
         lg.add_variable("pm.vbat", "float")
         lg.add_variable("pm.state", "int8_t")
         try:
@@ -642,18 +638,18 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         self._update_ui_state()
 
     def _led_write_done(self, mem, addr):
-        logger.info("LED write done callback")
+        logger.info("Appel d'écriture sur les LEDs effectué")
 
     def _logging_error(self, log_conf, msg):
-        QMessageBox.about(self, "Log error", "Error when starting log config"
+        QMessageBox.about(self, "Erreur sur la télémétrie", "erreur au démarrage de la configuration"
                                              " [{}]: {}".format(log_conf.name,
                                                                 msg))
 
     def _connection_lost(self, linkURI, msg):
         if not self._auto_reconnect_enabled:
             if self.isActiveWindow():
-                warningCaption = "Communication failure"
-                error = "Connection lost to {}: {}".format(linkURI, msg)
+                warningCaption = "Échec de communication"
+                error = "Connexion à {} : {}".format(linkURI, msg)
                 QMessageBox.critical(self, warningCaption, error)
                 self.uiState = UIState.DISCONNECTED
                 self._update_ui_state()
@@ -662,8 +658,8 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
     def _connection_failed(self, linkURI, error):
         if not self._auto_reconnect_enabled:
-            msg = "Failed to connect on {}: {}".format(linkURI, error)
-            warningCaption = "Communication failure"
+            msg = "Échec de communication avec {}: {}".format(linkURI, error)
+            warningCaption = "Échec de communication"
             QMessageBox.critical(self, warningCaption, msg)
             self.uiState = UIState.DISCONNECTED
             self._update_ui_state()
@@ -694,12 +690,12 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         self.uiState = UIState.SCANNING
         self._update_ui_state()
         self.interfaceCombo.clear()
-        logger.info('on scanne sur self.URI')
+        logger.info('on balaye les canaux sur self.URI')
         self.scanner.scanSignal.emit(self.address.value())
 
     def _display_input_device_error(self, error):
         self.cf.close_link()
-        QMessageBox.critical(self, "Input device error", error)
+        QMessageBox.critical(self, "Erreur du périphérique d'entrée", error)
 
     def _mux_selected(self, checked):
         """Called when a new mux is selected. The menu item contains a
@@ -741,12 +737,12 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
         if len(self.joystickReader.available_devices()) > 0:
             mux = self.joystickReader._selected_mux
-            msg = "Using {} mux with ".format(mux.name)
+            msg = "Utilisation de {} mux avec ".format(mux.name)
             for key in list(mux._devs.keys())[:-1]:
                 if mux._devs[key]:
                     msg += "{}, ".format(self._get_dev_status(mux._devs[key]))
                 else:
-                    msg += "N/A, "
+                    msg += "introuvable, "
             # Last item
             key = list(mux._devs.keys())[-1]
             if mux._devs[key]:
@@ -754,7 +750,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             else:
                 msg += "N/A"
         else:
-            msg = "No input device found"
+            msg = "pas de périphérique d'entrée trouvé"
         self._statusbar_label.setText(msg)
 
     def connect_updated(self, state):
@@ -763,8 +759,8 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             if re.search("^radio",l):
                 self._connect()
             else :
-                msg = "Please scan again, no URI defined"
-                warningCaption = "Link"
+                msg = "Relancer le balayage, aucune URI définie"
+                warningCaption = "Liaison"
                 QMessageBox.critical(self, warningCaption, msg)
 
     def _inputdevice_selected(self, checked):
@@ -791,7 +787,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                             dev_node.setChecked(False)
 
             role_in_mux = str(self.sender().parent().title()).strip()
-            logger.info("Role of {} is {}".format(device.name,
+            logger.info("Le rôle de {} est {}".format(device.name,
                                                   role_in_mux))
 
             Config().set("input_device", str(device.name))
@@ -828,7 +824,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
                 map_node = None
                 if d.supports_mapping:
-                    map_node = QMenu("    Input map", role_menu, enabled=False)
+                    map_node = QMenu("    profile du périphérique", role_menu, enabled=False)
                     map_group = QActionGroup(role_menu, exclusive=True)
                     # Connect device node to map node for easy
                     # enabling/disabling when selection changes and device
@@ -883,7 +879,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             # Select the first device in the first mux (will always be "Normal"
             # mux)
             self._all_role_menus[0]["rolemenu"].actions()[0].setChecked(True)
-            logger.info("Select first device")
+            logger.info("Choisir le premier dispositif")
 
         self._update_input_device_footer()
 
@@ -901,7 +897,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         s = str(hex(self.add))
         t = s[2:].upper()
         self.URI = self.URI_0+t
-        logger.debug('Adresse changée {}, URI {}'.format(t, self.URI))
+        logger.debug('Adresse modifiée {}, URI {}'.format(t, self.URI))
         self._selected_interface = self.URI
         self.interfaceCombo.addItem(INTERFACE_PROMPT_TEXT)
         self.scanButton.setEnabled(True)
@@ -922,4 +918,3 @@ class ScannerThread(QThread):
 
     def scan(self, address):
         self.interfaceFoundSignal.emit(cflib.crtp.scan_interfaces(address))
-
