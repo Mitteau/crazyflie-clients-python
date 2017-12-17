@@ -486,8 +486,8 @@ class JoystickReader(object):
                                                            self._target_height)
                 
                 elif self._assisted_control == JoystickReader.ASSISTED_CONTROL_HOVER :
-                    vy = - JoystickReader.deadband(data.roll,.15) / 2.
-                    vx = JoystickReader.deadband(data.pitch,.15) / 2.
+                    vy = - JoystickReader.deadband(data.roll,.15)
+                    vx = JoystickReader.deadband(data.pitch,.15)
                     yawrate = data.yaw
                     if self.landing : vz = - Vz
                     else : vz = Vz * thrust

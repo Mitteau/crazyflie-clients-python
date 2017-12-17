@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>793</width>
-    <height>620</height>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -560,7 +560,7 @@
        <property name="minimumSize">
         <size>
          <width>0</width>
-         <height>160</height>
+         <height>130</height>
         </size>
        </property>
        <property name="font">
@@ -575,7 +575,7 @@
         <enum>Qt::StrongFocus</enum>
        </property>
        <property name="title">
-        <string>Speak (hexadecimal)</string>
+        <string>Speak (hexadecimal, sans 0x)</string>
        </property>
        <property name="flat">
         <bool>true</bool>
@@ -609,7 +609,7 @@
           <x>0</x>
           <y>50</y>
           <width>731</width>
-          <height>101</height>
+          <height>71</height>
          </rect>
         </property>
         <property name="font">

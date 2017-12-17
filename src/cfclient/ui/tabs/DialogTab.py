@@ -99,7 +99,7 @@ class DialogTab(Tab, dialog_tab_class):
         self.send.setEnabled(False)
         self.clearButton.clicked.connect(self.clear)
         self.started = True
-        self.the_port = -1
+        self.the_port = 0x0
         self.the_channel = -1
         self.line = 1
         self.lines_max = 10
@@ -210,7 +210,8 @@ class DialogTab(Tab, dialog_tab_class):
         elif i == 13 : self.the_port = 0xD
         elif i == 14 : self.the_port = 0xE
         elif i == 15 : self.the_port = 0xF
-        else : self.the_port = -1
+        elif i == 16 : self.the_port = 0xFF
+        elif i == 17 : self.the_port = 0xFE
 
     def change_channel(self, i) :
         if i < 8 : self.the_channel = i
@@ -231,10 +232,15 @@ class DialogTab(Tab, dialog_tab_class):
             self.printText(pk, True)
 
     def printText(self, pk, into):
+        oui = False
         if (self.line > self.lines_max) and (self.lines_max >= 0) : 
             self.startButton.setText("Hear")
             self.started = False
-        if (pk._get_port() == self.the_port or self.the_port < 0)\
+        if pk.header == 0xFF and self.the_port == 0xFF : oui = True
+        elif pk._get_port() == self.the_port : oui = True
+        else : oui = False
+
+        if (oui or self.the_port  == 0xFE)\
                  and (pk._get_channel() == self.the_channel or self.the_channel < 0)\
                  and (self.line <= self.lines_max or self.lines_max < 0)\
                  and self.started :

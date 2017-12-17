@@ -32,7 +32,7 @@ it into the UI when it is started.
 from .ConsoleTab import ConsoleTab
 # from .ExampleTab import ExampleTab
 from .FlightTab import FlightTab
-# from .GpsTab import GpsTab
+from .GpsTab import GpsTab
 from .DialogTab import DialogTab
 from .LEDTab import LEDTab
 from .LogBlockTab import LogBlockTab
@@ -48,7 +48,7 @@ available = [
     ConsoleTab,
     # ExampleTab,
     FlightTab,
-    # GpsTab,
+    GpsTab,
     DialogTab,
     LEDTab,
     LogBlockTab,
