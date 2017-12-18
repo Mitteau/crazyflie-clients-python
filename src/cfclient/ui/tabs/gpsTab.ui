@@ -62,7 +62,7 @@
      <widget class="QLineEdit" name="_nbr_locked_sats">
       <property name="maximumSize">
        <size>
-        <width>100</width>
+        <width>40</width>
         <height>16777215</height>
        </size>
       </property>
@@ -88,7 +88,7 @@
      <widget class="QLineEdit" name="_fix_type">
       <property name="maximumSize">
        <size>
-        <width>100</width>
+        <width>40</width>
         <height>16777215</height>
        </size>
       </property>
@@ -140,7 +140,7 @@
      <widget class="QLineEdit" name="_long">
       <property name="maximumSize">
        <size>
-        <width>100</width>
+        <width>150</width>
         <height>16777215</height>
        </size>
       </property>
@@ -166,7 +166,7 @@
      <widget class="QLineEdit" name="_lat">
       <property name="maximumSize">
        <size>
-        <width>100</width>
+        <width>150</width>
         <height>16777215</height>
        </size>
       </property>
