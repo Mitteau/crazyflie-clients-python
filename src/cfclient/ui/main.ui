@@ -459,7 +459,7 @@
   </action>
   <action name="menuItemExit">
    <property name="text">
-    <string>Exit Ctrl+q</string>
+    <string>Exit</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>

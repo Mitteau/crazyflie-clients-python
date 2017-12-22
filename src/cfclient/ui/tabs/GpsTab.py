@@ -62,11 +62,12 @@ class GpsTab(Tab, gps_tab_class):
 
     _log_data_signal = pyqtSignal(int, object, object)
     _log_error_signal = pyqtSignal(object, str)
-
+######
     _disconnected_signal = pyqtSignal(str)
     _connected_signal = pyqtSignal(str)
 ####    _console_signal = pyqtSignal(str)
     _update = pyqtSignal(str)
+    _buffer_full = pyqtSignal(str)
 
     def __init__(self, tabWidget, helper, *args):
         super(GpsTab, self).__init__(*args)
@@ -85,8 +86,8 @@ class GpsTab(Tab, gps_tab_class):
         self.scene.addLine(0, 300, 600, 300)
 
         # Connect the signals
-        self._log_data_signal.connect(self._log_data_received)
-        self._log_error_signal.connect(self._logging_error)
+######        self._log_data_signal.connect(self._log_data_received)
+######        self._log_error_signal.connect(self._logging_error)
         self._connected_signal.connect(self._connected)
         self._disconnected_signal.connect(self._disconnected)
         self.stop_messages.clicked.connect(self._stop_m)
@@ -97,12 +98,17 @@ class GpsTab(Tab, gps_tab_class):
             self._disconnected_signal.emit)
         self.helper.cf.connected.add_callback(
             self._connected_signal.emit)
-        self._update.connect(self.printText)
+        self._update.connect(self.bufferize)
+        self._buffer_full.connect(self.print_info)
         self.helper.cf.console.receivedChar.add_callback(self._update.emit)
 
-        self.lat = 0
-        self.longe = 0
+        self.lat_d = 0
+        self.lat_m = 0
+        self.longe_d = 0
+        self.longe_m = 0
         self.run = False
+        self.buff = []
+        self.init_message = False
        
 
         """
@@ -162,30 +168,74 @@ class GpsTab(Tab, gps_tab_class):
         """
 
     def _connected(self, link_uri):
-        lg = LogConfig("GPS", 1000)
-        lg.add_variable("gps.lat")
-        lg.add_variable("gps.lon")
-        lg.add_variable("gps.hAcc")
-        lg.add_variable("gps.hMSL")
-        lg.add_variable("gps.nsat")
-        lg.add_variable("gps.fix")
+        self.init_message = False
+        logger.info('GpsTab connecté')
+######################################################################
+        
+        """
+        lg = LogConfig("GPS_base", 1000)
+        lg.add_variable("gps_base.hAcc")
+        lg.add_variable("gps_base.time")
+        lg.add_variable("gps_base.nsat")
+        lg.add_variable("gps_base.fix")
         self._cf.log.add_config(lg)
         if lg.valid:
             lg.data_received_cb.add_callback(self._log_data_signal.emit)
             lg.error_cb.add_callback(self._log_error_signal.emit)
             lg.start()
         else:
+            logger.warning("Could not setup logging block for GPS_base!")
+####        self._max_speed = 0.0
+        lg1 = LogConfig("GPS_tracking", 1000)
+        lg1.add_variable("gps_track.lat_d")
+        lg1.add_variable("gps_track.lat_m")
+        lg1.add_variable("gps_track.NS")
+        lg1.add_variable("gps_track.lon_d")
+        lg1.add_variable("gps_track.lon_m")
+        lg1.add_variable("gps_track_track.EW")
+        lg1.add_variable("gps_track_track.hMSL")
+        self._cf.log.add_config(lg1)
+        if lg1.valid:
+            lg1.data_received_cb.add_callback(self._log_data_signal.emit)
+            lg1.error_cb.add_callback(self._log_error_signal.emit)
+            lg1.start()
+        else:
             logger.warning("Could not setup logging block for GPS!")
 ####        self._max_speed = 0.0
+        
+######################################################################
+        """
 
     def _disconnected(self, link_uri):
         """Callback for when the Crazyflie has been disconnected"""
         return
 
-    def printText(self, text):
-        # Make sure we get printouts from the Crazyflie into the log (such as
+####    def printText(self, text):
+####        # Make sure we get printouts from the Crazyflie into the log (such as
         # build version and test ok/fail)
-        if self.run and text[0] == "$" : self.messages.insertPlainText(text)
+####        if self.run : self.messages.insertPlainText(text) #### Cas NMEA seulement
+
+    def bufferize(self, ch) :
+####        logger.info("{}".format(ch))
+####        if ch[0] == "$" :
+ ####           self.init_message = True
+####            logger.info('XXXXXXXXXXXXXXXXXXXXXXXXXself.init vrai')
+####        if (ord(ch[0]) == 13) : #### and self.init_message :
+####            self.init_message = False
+####            logger.info('YYYYYYYYYYYYYYYYYYYYYYYYYself.init faux')
+####            self.messages.insertPlainText(self.buff[0])
+####            self._buffer_full.emit(self.buff[0])
+####            self.messages.insertPlainText('\n')
+####            self.buff[0] = 0
+ ####       if self.init_message :
+####            self.buff.append(ch[0])
+        self.messages.insertPlainText(ch)
+####            logger.info("{}".format(hex(ord(ch[0]))))
+
+
+    def print_info(self, text) :
+        if self.run : self.messages.insertPlainText(text) #### Cas NMEA seulement
+
 
     def _stop_m(self):
         if self.run : self.run = False
@@ -194,10 +244,10 @@ class GpsTab(Tab, gps_tab_class):
     def _clear_m(self):
         self.messages.clear()
 
-    def _logging_error(self, log_conf, msg):
-        """Callback from the log layer when an error occurs"""
-        QMessageBox.about(self, "Plot error", "Error when starting log config"
-                          " [%s]: %s" % (log_conf.name, msg))
+####    def _logging_error(self, log_conf, msg):
+####        """Callback from the log layer when an error occurs"""
+####        QMessageBox.about(self, "Plot error", "Error when starting log config"
+####                          " [%s]: %s" % (log_conf.name, msg))
 
     def _reset_max(self):
         """Callback from reset button"""
@@ -212,42 +262,43 @@ class GpsTab(Tab, gps_tab_class):
         self._fix_type.setText("")
 
     def _log_data_received(self, timestamp, data, logconf):
-        """Callback when the log layer receives new data"""
-        longe = float(data["gps.lon"]) / 10000000.0
-####        longe = 40.25478
-        if longe > 0 : le = "E"
-        elif longe < 0 :
-            le = "W"
-            longe = -longe
-        else : le = ""
-        ld = math.floor(longe)
-        l1 = (longe-ld) * 60
-        lm = math.floor(l1)
-        ls = (l1-lm) * 60
-        ls = math.floor(ls * 100000)/100000
-        lat = float(data["gps.lat"]) / 10000000.0
-####       lat = -28.2593
-        if lat > 0 : te = "N"
-        elif lat < 0 :
-            te = "S"
-            lat = -lat
-        else : te = ""
-        td = math.floor(lat)
-        t1 = (lat-td) * 60
-        tm = math.floor(t1)
-        ts = (t1-tm) * 60
-        ts = math.floor(ts * 100000)/100000
-        ft = data["gps.fix"]
-####        ht = 1005.4581
-        ht = float(data["gps.hMSL"])
 
-        if self._lat != lat or self._long != longe:
+
+
+
+        """Callback when the log layer receives new data"""
+####        longe_m = float(data["gps_track.lon_m"]) / 1000000.0
+        longe_m = 33914843/1000000.
+####        logger.info('Longitude uint32 {}'.format(data["gps_track.lon_m"]))
+####        le = data["gps_track.EW"]
+        longe_d = int(data["gps_track.lon_d"])
+        ld = longe_d
+        l1 = longe_m
+        lm = math.floor(longe_m)
+        ls = (l1-lm) * 60.
+####        ls = math.floor(ls * 100000)/100000
+####        lat_m = float(data["gps_track.lat_m"]) / 1000000.0
+        lat_m = -28.2593
+####        te = data["gps_track.NS"]
+        lat_d = data["gps_track.lat_d"]
+        td = lat_d
+        t1 = lat_m
+        tm = math.floor(lat_m)
+        ts = (t1-tm) * 60.
+####        ft = data["gps_base.fix"]
+####        ht = 1005.4581
+        ht = float(data["gps_track.hMSL"])
+
+        if self.lat_d != lat_d or self.longe_d != longe_d\
+             or self.lat_m != lat_m or self.longe_m != longe_m :
             self._long.setText("{}° {}' {:.3f}\" {}".format(ld,lm,ls,le))
             self._lat.setText("{}° {}' {:.3f}\" {}".format(td,tm,ts,te))
-            self._nbr_locked_sats.setText(str(data["gps.nsat"]))
-            self._height.setText("{:.2f} meter".format(ht))
+            self._nbr_locked_sats.setText(str(data["gps_base.nsat"]))
+####            self._height.setText("{:.2f} meter".format(ht))
 ####            self._place_cf(long, lat, 1)
-            self._lat = lat
-            self._long = longe
-            self._fix_type.setText("{}".format(data["gps.fix"]))
+            self.lat_m = lat_m
+            self.lat_d = lat_d
+            self.longe_m = longe_m
+            self.longe_d = longe_d
+####        self._fix_type.setText("{}".format(data["gps_base.fix"]))
 

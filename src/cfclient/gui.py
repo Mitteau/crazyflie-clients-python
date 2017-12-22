@@ -110,7 +110,7 @@ def main():
     try:
         import PyQt5  # noqa
     except ImportError:
-        logger.critical("No PyQT5 installation found, exiting!")
+        logger.critical("No PyQt5 installation found, exiting!")
         sys.exit(1)
 
     # Disable printouts from STL
