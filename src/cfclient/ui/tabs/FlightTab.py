@@ -393,21 +393,21 @@ class FlightTab(Tab, flight_tab_class):
             logger.warning(str(e)+"Stabilizer")
 
         # MOTOR
-####        lg = LogConfig("Motors", Config().get("ui_update_period"))
-####        lg.add_variable("motor.m1")
-####        lg.add_variable("motor.m2")
-####        lg.add_variable("motor.m3")
-####        lg.add_variable("motor.m4")
+        lg = LogConfig("Motors", Config().get("ui_update_period"))
+        lg.add_variable("motor.m1")
+        lg.add_variable("motor.m2")
+        lg.add_variable("motor.m3")
+        lg.add_variable("motor.m4")
 
-####        try:
-####            self.helper.cf.log.add_config(lg)
-####            lg.data_received_cb.add_callback(self._motor_data_signal.emit)
-####            lg.error_cb.add_callback(self._log_error_signal.emit)
- ####           lg.start()
-####        except KeyError as e:
-####            logger.warning(str(e)+"motor")
-####        except AttributeError as e:
-####            logger.warning(str(e)+"motor")
+        try:
+            self.helper.cf.log.add_config(lg)
+            lg.data_received_cb.add_callback(self._motor_data_signal.emit)
+            lg.error_cb.add_callback(self._log_error_signal.emit)
+            lg.start()
+        except KeyError as e:
+            logger.warning(str(e)+"motor")
+        except AttributeError as e:
+            logger.warning(str(e)+"motor")
 
         self.helper.cf.param.set_value("flightmode.althold", "0")
         self._assist_mode_combo.setEnabled(True)
