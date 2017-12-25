@@ -35,6 +35,8 @@ import math
 from PyQt5.QtCore import pyqtSlot, pyqtSignal
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QGraphicsScene
+
+from PyQt5.QtGui import QPixmap
 from cfclient.ui.tab import Tab
 from cflib.crazyflie.log import LogConfig
 from PyQt5 import QtCore
@@ -81,10 +83,20 @@ class GpsTab(Tab, gps_tab_class):
         self.helper = helper
         self._cf = helper.cf
 
-        self.scene = QGraphicsScene(0, 0, 600, 600, self.tabWidget)
+        self.scene = QGraphicsScene(0, 0, 1200, 1200, self.tabWidget) #### unités cm
         self.plan.setScene(self.scene)
-        self.scene.addLine(300, 0, 300, 600)
-        self.scene.addLine(0, 300, 600, 300)
+        self.background = QPixmap()
+        self.background.load("/home/jclaude/BTCZ/fond.png")
+        self.scene.addPixmap(self.background)
+        self.center_x = -60 #### coordonnées du point d'envol ?
+        self.center_y = 350
+        self.scene.addLine(600+self.center_x, 0, 600+self.center_x, 1200)
+        self.scene.addLine(0, 600+self.center_y, 1200, 600+self.center_y)
+        self.scene.addEllipse(550+self.center_x, 550+self.center_y, 100, 100)
+        self.scene.addEllipse(500+self.center_x, 500+self.center_y, 200, 200)
+        self.scene.addEllipse(350+self.center_x, 350+self.center_y, 500, 500)
+        self.scene.addEllipse(100+self.center_x, 100+self.center_y, 1000, 1000)
+        self.plan.translate(self.center_x, self.center_y)
 
         # Connect the signals
         self._log_data_signal_b.connect(self._log_data_received_b)
@@ -94,13 +106,14 @@ class GpsTab(Tab, gps_tab_class):
         self._disconnected_signal.connect(self._disconnected)
         self.stop_messages.clicked.connect(self._stop_m)
         self.clear_messages.clicked.connect(self._clear_m)
+        self._ok_messages.clicked.connect(self._ok_m)
 
         # Connect the callbacks from the Crazyflie API
         self.helper.cf.disconnected.add_callback(
             self._disconnected_signal.emit)
         self.helper.cf.connected.add_callback(
             self._connected_signal.emit)
-        self._update.connect(self.bufferize)
+        self._update.connect(self.print_info)
         self._buffer_full.connect(self.print_info)
         self.helper.cf.console.receivedChar.add_callback(self._update.emit)
 
@@ -110,8 +123,7 @@ class GpsTab(Tab, gps_tab_class):
         self.longe_m = 0
         self.run = False
         self.buff = []
-        self.init_message = False
-       
+        self.show_m = False
 
         """
 ###################################################################### Visualisation carte
@@ -170,15 +182,11 @@ class GpsTab(Tab, gps_tab_class):
         """
 
     def _connected(self, link_uri):
-        self.init_message = False
-        logger.info('GpsTab connecté')
-######################################################################
-        
         lg = LogConfig("GPS_base", 1000)
 ####        lg.add_variable("gps_base.hAcc")
         lg.add_variable("gps_base.time")
         lg.add_variable("gps_base.nsat")
-####        lg.add_variable("gps_base.fix")
+        lg.add_variable("gps_base.fixquality")
         self._cf.log.add_config(lg)
         if lg.valid:
             lg.data_received_cb.add_callback(self._log_data_signal_b.emit)
@@ -205,10 +213,19 @@ class GpsTab(Tab, gps_tab_class):
         else:
             logger.warning("Could not setup logging block for GPS_tracking!")
 ####        self._max_speed = 0.0
+        self.helper.cf.param.set_value("gps.messages", "0")
+        self.show_m = False
+        self.run = True
+        self.messages.clear()
+        self._ok_messages.setChecked(self.show_m)
         
 ######################################################################
         """
         """
+    def _ok_m(self, value) :
+        self.show_m = value
+        self.helper.cf.param.set_value("gps.messages", str(value))
+        self.run = self.show_m
 
     def _disconnected(self, link_uri):
         """Callback for when the Crazyflie has been disconnected"""
@@ -239,8 +256,10 @@ class GpsTab(Tab, gps_tab_class):
 
 
     def print_info(self, text) :
-        if self.run : self.messages.insertPlainText(text) #### Cas NMEA seulement
-
+        if self.run and self.show_m :
+            self.messages.insertPlainText(text) #### Cas NMEA seulement
+            maxi = self.messages.verticalScrollBar().maximum()
+            self.messages.verticalScrollBar().setValue(maxi)
 
     def _stop_m(self):
         if self.run : self.run = False
@@ -269,6 +288,7 @@ class GpsTab(Tab, gps_tab_class):
     def _log_data_received_b(self, timestamp, data, logconf):
         """Callback when the log layer receives new data"""
         self._nbr_locked_sats.setText(str(data["gps_base.nsat"]))
+        self._fix_type.setText("%d" % data["gps_base.fixquality"])
 ####        self._fix_type.setText("{}".format(data["gps_base.fix"]))
 
     def _log_data_received_t(self, timestamp, data, logconf):
@@ -296,15 +316,13 @@ class GpsTab(Tab, gps_tab_class):
         t1 = tm * 10000000
         ts = (lat_m - t1) * 6.
         if ts != 0 : ts = ts / 100000
-
-####        ft = data["gps_base.fix"]
         ht = float(data["gps_track.hMSL"])
-        ht = 1005.4581
 
         if self.lat_d != lat_d or self.longe_d != longe_d\
              or self.lat_m != lat_m or self.longe_m != longe_m :
             self._long.setText("%d° %d' %f\" %c" % (ld,lm,ls,le))
             self._lat.setText("%d° %d' %f\" %c" % (td,tm,ts,te))
+            self._height.setText("%.1f" % ht)
             self.lat_m = lat_m
             self.lat_d = lat_d
             self.longe_m = longe_m

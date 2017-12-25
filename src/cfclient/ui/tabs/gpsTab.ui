@@ -121,18 +121,9 @@
      </widget>
     </item>
     <item>
-     <widget class="QLabel" name="label">
-      <property name="maximumSize">
-       <size>
-        <width>200</width>
-        <height>40</height>
-       </size>
-      </property>
+     <widget class="QCheckBox" name="_ok_messages">
       <property name="text">
        <string>Messages from GPS module: </string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
       </property>
      </widget>
     </item>
@@ -141,7 +132,7 @@
       <property name="maximumSize">
        <size>
         <width>400</width>
-        <height>60</height>
+        <height>200</height>
        </size>
       </property>
      </widget>
@@ -163,7 +154,7 @@
          </size>
         </property>
         <property name="text">
-         <string>Start/stop</string>
+         <string>Stop/start</string>
         </property>
        </widget>
       </item>
@@ -224,7 +215,7 @@
      <widget class="QLineEdit" name="_long">
       <property name="maximumSize">
        <size>
-        <width>150</width>
+        <width>180</width>
         <height>16777215</height>
        </size>
       </property>
@@ -250,7 +241,7 @@
      <widget class="QLineEdit" name="_lat">
       <property name="maximumSize">
        <size>
-        <width>150</width>
+        <width>180</width>
         <height>16777215</height>
        </size>
       </property>
