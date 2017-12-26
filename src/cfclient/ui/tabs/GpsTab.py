@@ -32,7 +32,7 @@ import logging
 
 import cfclient
 import math
-from PyQt5.QtCore import pyqtSlot, pyqtSignal
+from PyQt5.QtCore import pyqtSlot, pyqtSignal, QTime
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QGraphicsScene
 
@@ -124,6 +124,7 @@ class GpsTab(Tab, gps_tab_class):
         self.run = False
         self.buff = []
         self.show_m = False
+        self.t_gps = QTime()
 
         """
 ###################################################################### Visualisation carte
@@ -183,8 +184,8 @@ class GpsTab(Tab, gps_tab_class):
 
     def _connected(self, link_uri):
         lg = LogConfig("GPS_base", 1000)
-####        lg.add_variable("gps_base.hAcc")
         lg.add_variable("gps_base.time")
+        lg.add_variable("gps_base.hAcc")
         lg.add_variable("gps_base.nsat")
         lg.add_variable("gps_base.fixquality")
         self._cf.log.add_config(lg)
@@ -225,6 +226,7 @@ class GpsTab(Tab, gps_tab_class):
     def _ok_m(self, value) :
         self.show_m = value
         self.helper.cf.param.set_value("gps.messages", str(value))
+        self.helper.cf.param.set_value("pm.timeOutSystem", str(1-value))
         self.run = self.show_m
 
     def _disconnected(self, link_uri):
@@ -287,8 +289,23 @@ class GpsTab(Tab, gps_tab_class):
 
     def _log_data_received_b(self, timestamp, data, logconf):
         """Callback when the log layer receives new data"""
-        self._nbr_locked_sats.setText(str(data["gps_base.nsat"]))
+        ns = data["gps_base.nsat"]
+####        logger.info("n sat {}".format(ns))
+        self._nbr_locked_sats.setText("%d" % ns)
         self._fix_type.setText("%d" % data["gps_base.fixquality"])
+        tm = data["gps_base.time"]
+####        logger.info("gps time {}".format(tm))
+        ts = int(tm)
+        th = ts // 3600
+        th = th % 24
+        ti = ts % 3600
+        tmn = ti // 60
+        tsec = ti % 60
+        tmsec = int((tm - ts) *100)
+####        logger.info("time formaté {} h {} m {},{} sec".format(th, tmn, tsec, tmsec))
+        self.t_gps.setHMS(th, tmn, tsec, tmsec)
+        self._time.setTime(self.t_gps)
+        self._hdop.setText("%0.2f" % data["gps_base.hAcc"])
 ####        self._fix_type.setText("{}".format(data["gps_base.fix"]))
 
     def _log_data_received_t(self, timestamp, data, logconf):
