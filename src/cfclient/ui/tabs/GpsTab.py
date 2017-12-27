@@ -84,9 +84,9 @@ class GpsTab(Tab, gps_tab_class):
         self._cf = helper.cf
 
         self.scene = QGraphicsScene(0, 0, 1200, 1200, self.tabWidget) #### unités cm
-        self.plan.setScene(self.scene)
+        self.plan.setScene(self.scene) #### plan = QGraphicsView
         self.background = QPixmap()
-        self.background.load("/home/jclaude/BTCZ/fond.png")
+        self.background.load(cfclient.module_path + "/resources/fond.png")
         self.scene.addPixmap(self.background)
         self.center_x = -60 #### coordonnées du point d'envol ?
         self.center_y = 350
@@ -96,7 +96,7 @@ class GpsTab(Tab, gps_tab_class):
         self.scene.addEllipse(500+self.center_x, 500+self.center_y, 200, 200)
         self.scene.addEllipse(350+self.center_x, 350+self.center_y, 500, 500)
         self.scene.addEllipse(100+self.center_x, 100+self.center_y, 1000, 1000)
-        self.plan.translate(self.center_x, self.center_y)
+        self.plan.centerOn(600+self.center_x, 600+self.center_y)
 
         # Connect the signals
         self._log_data_signal_b.connect(self._log_data_received_b)
@@ -107,6 +107,7 @@ class GpsTab(Tab, gps_tab_class):
         self.stop_messages.clicked.connect(self._stop_m)
         self.clear_messages.clicked.connect(self._clear_m)
         self._ok_messages.clicked.connect(self._ok_m)
+        self._init.stateChanged.connect(self._ok_nav)
 
         # Connect the callbacks from the Crazyflie API
         self.helper.cf.disconnected.add_callback(
@@ -125,6 +126,15 @@ class GpsTab(Tab, gps_tab_class):
         self.buff = []
         self.show_m = False
         self.t_gps = QTime()
+        self._fixed.setVisible(False)
+        self._init_nav = False
+        self._init_time = True
+        self._init.setChecked(self._init_nav)
+        self._t_init = 0
+        self._l_d_init = 0
+        self._l_m_init = 0
+        self._lt_d_init = 0
+        self._lt_m_init = 0
 
         """
 ###################################################################### Visualisation carte
@@ -185,6 +195,7 @@ class GpsTab(Tab, gps_tab_class):
     def _connected(self, link_uri):
         lg = LogConfig("GPS_base", 1000)
         lg.add_variable("gps_base.time")
+        lg.add_variable("gps_base.fixed")
         lg.add_variable("gps_base.hAcc")
         lg.add_variable("gps_base.nsat")
         lg.add_variable("gps_base.fixquality")
@@ -219,6 +230,7 @@ class GpsTab(Tab, gps_tab_class):
         self.run = True
         self.messages.clear()
         self._ok_messages.setChecked(self.show_m)
+        self._fixed.setVisible(False)
         
 ######################################################################
         """
@@ -229,9 +241,30 @@ class GpsTab(Tab, gps_tab_class):
         self.helper.cf.param.set_value("pm.timeOutSystem", str(1-value))
         self.run = self.show_m
 
+    def _ok_nav(self, value) :
+        if value == 2 : self._init_nav = True
+        else : self._init_nav = False
+        self.label_8.setEnabled(self._init_nav)
+        self.label_9.setEnabled(self._init_nav)
+        self.label_10.setEnabled(self._init_nav)
+        self.label_11.setEnabled(self._init_nav)
+        self._deltaX.setEnabled(self._init_nav)
+        self._deltaY.setEnabled(self._init_nav)
+        self._deltaZ.setEnabled(self._init_nav)
+        if not self._init_nav :
+            self._t_init = 0
+            self._init_time = True
+            self._deltaX.clear() #### ne marche pas
+            self._deltaY.clear()
+            self._deltaZ.clear()
+            
+
+
+
     def _disconnected(self, link_uri):
         """Callback for when the Crazyflie has been disconnected"""
-        return
+        self._fixed.setVisible(False)
+        self.cnted = False
 
 ####    def printText(self, text):
 ####        # Make sure we get printouts from the Crazyflie into the log (such as
@@ -290,11 +323,21 @@ class GpsTab(Tab, gps_tab_class):
     def _log_data_received_b(self, timestamp, data, logconf):
         """Callback when the log layer receives new data"""
         ns = data["gps_base.nsat"]
+####        logger.info('Fixed {}'.format(data["gps_base.fixed"]))
+        if data["gps_base.fixed"] == 65 : self._fixed.setVisible(True)
+        else : self._fixed.setVisible(False)
 ####        logger.info("n sat {}".format(ns))
         self._nbr_locked_sats.setText("%d" % ns)
         self._fix_type.setText("%d" % data["gps_base.fixquality"])
         tm = data["gps_base.time"]
-####        logger.info("gps time {}".format(tm))
+####        logger.info('time {}'.format(tm))
+        if self._init_nav :
+            if self._init_time :
+                self._t_init = tm
+                self._init_time = False
+            else :
+                tm = tm - self._t_init
+            logger.info("init {}, initial time {}, time {}".format(self._init_time, self._t_init, tm))
         ts = int(tm)
         th = ts // 3600
         th = th % 24
@@ -312,8 +355,18 @@ class GpsTab(Tab, gps_tab_class):
         """Callback when the log layer receives new data"""
         le = data["gps_track.EW"]
         longe_d = data["gps_track.lon_d"]
+        if self._l_d_init == 0 : self._l_d_init = longe_d
+        else : longe_d
 ####        logger.info('Longitude  d° uint32 >{}<'.format(longe_d))
         longe_m = data["gps_track.lon_m"]
+
+####        if self._init_nav == True :
+####            self._l_m_init = longe_m
+####            self._init_nav = False
+####            self._deltaX.setText("0")
+####        else :
+####            ecart_X = (longe_m - self._l_m_init) * 0.0001852
+####            self._deltaX.setText("%d m" % ecart_X)
 ####        logger.info('Longitude  m\' uint32 >{}<'.format(longe_m))
         ld = longe_d
         if longe_m != 0 : lm = longe_m // 10000000 #### cas égal 0 ?
@@ -337,8 +390,8 @@ class GpsTab(Tab, gps_tab_class):
 
         if self.lat_d != lat_d or self.longe_d != longe_d\
              or self.lat_m != lat_m or self.longe_m != longe_m :
-            self._long.setText("%d° %d' %f\" %c" % (ld,lm,ls,le))
-            self._lat.setText("%d° %d' %f\" %c" % (td,tm,ts,te))
+            self._long.setText("%d° %d' %.3f\" %c" % (ld,lm,ls,le))
+            self._lat.setText("%d° %d' %.3f\" %c" % (td,tm,ts,te))
             self._height.setText("%.1f" % ht)
             self.lat_m = lat_m
             self.lat_d = lat_d
