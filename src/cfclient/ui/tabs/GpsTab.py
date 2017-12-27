@@ -118,6 +118,7 @@ class GpsTab(Tab, gps_tab_class):
         self._buffer_full.connect(self.print_info)
         self.helper.cf.console.receivedChar.add_callback(self._update.emit)
 
+        self.fixed = False
         self.lat_d = 0
         self.lat_m = 0
         self.longe_d = 0
@@ -131,10 +132,14 @@ class GpsTab(Tab, gps_tab_class):
         self._init_time = True
         self._init.setChecked(self._init_nav)
         self._t_init = 0
+        self._init_long = True
         self._l_d_init = 0
         self._l_m_init = 0
+        self._init_lat = True
         self._lt_d_init = 0
         self._lt_m_init = 0
+        self._init_alt = True
+        self._alt_init = 0
 
         """
 ###################################################################### Visualisation carte
@@ -197,7 +202,8 @@ class GpsTab(Tab, gps_tab_class):
         lg.add_variable("gps_base.time")
         lg.add_variable("gps_base.fixed")
         lg.add_variable("gps_base.hAcc")
-        lg.add_variable("gps_base.nsat")
+        lg.add_variable("gps_base.Pnsat")
+        lg.add_variable("gps_base.Lnsat")
         lg.add_variable("gps_base.fixquality")
         self._cf.log.add_config(lg)
         if lg.valid:
@@ -322,12 +328,20 @@ class GpsTab(Tab, gps_tab_class):
 
     def _log_data_received_b(self, timestamp, data, logconf):
         """Callback when the log layer receives new data"""
-        ns = data["gps_base.nsat"]
 ####        logger.info('Fixed {}'.format(data["gps_base.fixed"]))
-        if data["gps_base.fixed"] == 65 : self._fixed.setVisible(True)
-        else : self._fixed.setVisible(False)
+        if data["gps_base.fixed"] == 65 :
+            self._fixed.setVisible(True)
+            self.fixed = True
+            self.label_3.setEnabled(True)
+            self._init.setEnabled(True)
+        else :
+            self._fixed.setVisible(False)
+            self.fixed = False
+            self.label_3.setEnabled(False)
+            self._init.setEnabled
 ####        logger.info("n sat {}".format(ns))
-        self._nbr_locked_sats.setText("%d" % ns)
+        self._g_nbr_locked_sats.setText("%d" % data["gps_base.Pnsat"])
+        self._l_nbr_locked_sats.setText("%d" % data["gps_base.Lnsat"])
         self._fix_type.setText("%d" % data["gps_base.fixquality"])
         tm = data["gps_base.time"]
 ####        logger.info('time {}'.format(tm))
@@ -337,7 +351,6 @@ class GpsTab(Tab, gps_tab_class):
                 self._init_time = False
             else :
                 tm = tm - self._t_init
-            logger.info("init {}, initial time {}, time {}".format(self._init_time, self._t_init, tm))
         ts = int(tm)
         th = ts // 3600
         th = th % 24
@@ -359,14 +372,13 @@ class GpsTab(Tab, gps_tab_class):
         else : longe_d
 ####        logger.info('Longitude  d° uint32 >{}<'.format(longe_d))
         longe_m = data["gps_track.lon_m"]
-
-####        if self._init_nav == True :
-####            self._l_m_init = longe_m
-####            self._init_nav = False
-####            self._deltaX.setText("0")
-####        else :
-####            ecart_X = (longe_m - self._l_m_init) * 0.0001852
-####            self._deltaX.setText("%d m" % ecart_X)
+        if self._init_nav == True : #### traiter les degrés !
+            if self._init_long :
+                self._l_m_init = longe_m
+                self._init_long = False
+            else :
+                ecart_X = (longe_m - self._l_m_init) * 0.0001852 / math.cos(self.lat_d)
+                self._deltaX.setText("%.2f m." % ecart_X)
 ####        logger.info('Longitude  m\' uint32 >{}<'.format(longe_m))
         ld = longe_d
         if longe_m != 0 : lm = longe_m // 10000000 #### cas égal 0 ?
@@ -380,6 +392,14 @@ class GpsTab(Tab, gps_tab_class):
         te = data["gps_track.NS"]
         lat_d = data["gps_track.lat_d"]
         lat_m = data["gps_track.lat_m"]
+        if self._init_nav == True : #### traiter les degrés !
+            if self._init_lat :
+                self._lt_m_init = lat_m
+                self._init_lat = False
+            else :
+                ecart_Y = (lat_m - self._lt_m_init) * 0.0001852
+                self._deltaY.setText("%.2f m." % ecart_Y)
+
         td = lat_d
         if lat_m != 0 : tm = lat_m // 10000000
         else : tm = 0
@@ -387,6 +407,13 @@ class GpsTab(Tab, gps_tab_class):
         ts = (lat_m - t1) * 6.
         if ts != 0 : ts = ts / 100000
         ht = float(data["gps_track.hMSL"])
+        if self._init_nav == True : #### traiter les degrés !
+            if self._init_alt :
+                self._alt_init = ht
+                self._init_alt = False
+            else :
+                ecart_Z = (ht - self._alt_init)
+                self._deltaZ.setText("%.2f m." % ecart_Z)
 
         if self.lat_d != lat_d or self.longe_d != longe_d\
              or self.lat_m != lat_m or self.longe_m != longe_m :
