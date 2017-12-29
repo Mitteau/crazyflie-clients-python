@@ -56,10 +56,10 @@ __all__ = ['GpsTab']
 logger = logging.getLogger(__name__)
 
 gps_tab_class = uic.loadUiType(cfclient.module_path +
-                               "/ui/tabs/gpsTab.ui")[0]
+                               "/ui/tabs/GNSSTab.ui")[0]
 
 
-class GpsTab(Tab, gps_tab_class):
+class GNSSTab(Tab, gps_tab_class):
     """Tab for plotting logging data"""
 
     _log_data_signal_b = pyqtSignal(int, object, object)
@@ -73,11 +73,11 @@ class GpsTab(Tab, gps_tab_class):
     _buffer_full = pyqtSignal(str)
 
     def __init__(self, tabWidget, helper, *args):
-        super(GpsTab, self).__init__(*args)
+        super(GNSSTab, self).__init__(*args)
         self.setupUi(self)
 
-        self.tabName = "GPS"
-        self.menuName = "GPS"
+        self.tabName = "GNSS"
+        self.menuName = "GNSS"
 
         self.tabWidget = tabWidget
         self.helper = helper
@@ -123,9 +123,9 @@ class GpsTab(Tab, gps_tab_class):
         self.lat_m = 0
         self.longe_d = 0
         self.longe_m = 0
-        self.run = False
+        self.run = True
         self.buff = []
-        self.show_m = False
+        self.show_m = True
         self.t_gps = QTime()
         self._fixed.setVisible(False)
         self._init_nav = False
@@ -232,11 +232,12 @@ class GpsTab(Tab, gps_tab_class):
             logger.warning("Could not setup logging block for GPS_tracking!")
 ####        self._max_speed = 0.0
         self.helper.cf.param.set_value("gps.messages", "0")
-        self.show_m = False
+        self.show_m = True
         self.run = True
         self.messages.clear()
         self._ok_messages.setChecked(self.show_m)
         self._fixed.setVisible(False)
+        self.helper.cf.param.set_value("gps.messages", str(1))
         
 ######################################################################
         """
@@ -334,11 +335,17 @@ class GpsTab(Tab, gps_tab_class):
             self.fixed = True
             self.label_3.setEnabled(True)
             self._init.setEnabled(True)
+            self._long.setEnabled(True)
+            self._lat.setEnabled(True)
+            self._height.setEnabled(True)
         else :
             self._fixed.setVisible(False)
             self.fixed = False
             self.label_3.setEnabled(False)
             self._init.setEnabled
+            self._long.setEnabled(False)
+            self._lat.setEnabled(False)
+            self._height.setEnabled(False)
 ####        logger.info("n sat {}".format(ns))
         self._g_nbr_locked_sats.setText("%d" % data["gps_base.Pnsat"])
         self._l_nbr_locked_sats.setText("%d" % data["gps_base.Lnsat"])
@@ -368,44 +375,57 @@ class GpsTab(Tab, gps_tab_class):
         """Callback when the log layer receives new data"""
         le = data["gps_track.EW"]
         longe_d = data["gps_track.lon_d"]
-        if self._l_d_init == 0 : self._l_d_init = longe_d
-        else : longe_d
-####        logger.info('Longitude  d° uint32 >{}<'.format(longe_d))
-        longe_m = data["gps_track.lon_m"]
+        k = longe_d // 1000 #### nombre de décimales
+        longe_d = longe_d % 1000
+        longe_m = data["gps_track.lon_m"] #### minutes * (10 ** k)
+
         if self._init_nav == True : #### traiter les degrés !
             if self._init_long :
+                self._l_d_init = longe_d
                 self._l_m_init = longe_m
                 self._init_long = False
             else :
-                ecart_X = (longe_m - self._l_m_init) * 0.0001852 / math.cos(self.lat_d)
+                diff_long = (longe_d - self._l_d_init) * 60
+                ecart_X = ((longe_m - self._l_m_init + diff_long) * 1852.) * math.cos(self.lat_d)
                 self._deltaX.setText("%.2f m." % ecart_X)
-####        logger.info('Longitude  m\' uint32 >{}<'.format(longe_m))
+        logger.info('Longitude  d\' uint32 >{}<'.format(longe_d))
+        logger.info('Longitude  m\' uint32 >{}<'.format(longe_m))
+        logger.info('k uint32 >{}<'.format(k))
         ld = longe_d
-        if longe_m != 0 : lm = longe_m // 10000000 #### cas égal 0 ?
+        if longe_m != 0 : lm = longe_m // (10 ** k) #### cas égal 0 ?
         else : lm = 0
 ####        logger.info('Longitude  m\' uint32 >{}<'.format(lm))
-        l1 = lm * 10000000
-        ls = (longe_m - l1) * 6.
-        if ls != 0 : ls = ls / 100000
-####        logger.info('Longitude  s" uint32 >{}<'.format(ls))
+        l1 = lm * (10 ** k)
+        logger.info('l1 >{}<'.format(l1))
+        ls = (longe_m - l1) * 6
+        if k > 1 : ldd = 10 ** (k-1)
+        else : ldd = 1 ####!!!!!!!!!!!!!!!!!!!!!!
+        logger.info('ldd >{}<'.format(ldd))
+        if ls != 0 : ls = ls / ldd
+        logger.info('ls >{}<'.format(ls))
 
         te = data["gps_track.NS"]
         lat_d = data["gps_track.lat_d"]
+        k1 = lat_d // 1000 #### nombre de décimales
+        lat_d = lat_d % 1000
         lat_m = data["gps_track.lat_m"]
         if self._init_nav == True : #### traiter les degrés !
             if self._init_lat :
                 self._lt_m_init = lat_m
                 self._init_lat = False
             else :
-                ecart_Y = (lat_m - self._lt_m_init) * 0.0001852
+                ecart_Y = (lat_m - self._lt_m_init) / 1852.
                 self._deltaY.setText("%.2f m." % ecart_Y)
 
         td = lat_d
-        if lat_m != 0 : tm = lat_m // 10000000
+        if lat_m != 0 : tm = lat_m //  (10 ** k1)
         else : tm = 0
-        t1 = tm * 10000000
+        t1 = tm* (10 ** k1)
         ts = (lat_m - t1) * 6.
-        if ts != 0 : ts = ts / 100000
+        if k > 1 : tdd = 10 ** (k1-1)
+        else : tdd = 1 ####!!!!!!!!!!!!!!!!!!!!!!
+        if ts != 0 : ts = ts / tdd
+
         ht = float(data["gps_track.hMSL"])
         if self._init_nav == True : #### traiter les degrés !
             if self._init_alt :

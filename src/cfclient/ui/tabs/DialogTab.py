@@ -260,6 +260,8 @@ class DialogTab(Tab, dialog_tab_class):
                 s = b.hex()
                 self.receive.insertPlainText("   "+s+"\n")
             self.line += 1
+            maxi = self.receive.verticalScrollBar().maximum()
+            self.receive.verticalScrollBar().setValue(maxi)
 
     def clear(self):
         self.receive.clear()
