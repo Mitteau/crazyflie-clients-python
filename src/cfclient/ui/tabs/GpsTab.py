@@ -334,11 +334,17 @@ class GpsTab(Tab, gps_tab_class):
             self.fixed = True
             self.label_3.setEnabled(True)
             self._init.setEnabled(True)
+            self._long.setEnabled(True)
+            self._lat.setEnabled(True)
+            self._height.setEnabled(True)
         else :
             self._fixed.setVisible(False)
             self.fixed = False
             self.label_3.setEnabled(False)
             self._init.setEnabled
+            self._long.setEnabled(False)
+            self._lat.setEnabled(False)
+            self._height.setEnabled(False)
 ####        logger.info("n sat {}".format(ns))
         self._g_nbr_locked_sats.setText("%d" % data["gps_base.Pnsat"])
         self._l_nbr_locked_sats.setText("%d" % data["gps_base.Lnsat"])
