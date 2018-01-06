@@ -49,6 +49,9 @@ from lpslib.lopoanchor import LoPoAnchor
 import copy
 import sys
 
+from cfclient.ui.dialogs.anchor_position_wizard_dialog import \
+    AnchorPositionWizardDialog
+
 __author__ = 'Bitcraze AB'
 __all__ = ['LocoPositioningTab']
 
@@ -320,6 +323,17 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
     # Update period of anchor position data
     UPDATE_PERIOD_ANCHOR_POS = 5000
 
+    UPDATE_PERIOD_LOCO_MODE = 1000
+
+    LOCO_MODE_UNKNOWN = -1
+    LOCO_MODE_AUTO = 0
+    LOCO_MODE_TWR = 1
+    LOCO_MODE_TDOA = 2
+
+    PARAM_MDOE_GR = 'loco'
+    PARAM_MODE_NM = 'mode'
+    PARAM_MODE = PARAM_MDOE_GR + '.' + PARAM_MODE_NM
+
     # Frame rate (updates per second)
     FPS = 2
 
@@ -328,6 +342,7 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
     _log_error_signal = pyqtSignal(object, str)
     _anchor_range_signal = pyqtSignal(int, object, object)
     _position_signal = pyqtSignal(int, object, object)
+    _loco_sys_signal = pyqtSignal(int, object, object)
     _anchor_position_signal = pyqtSignal(object)
 
     def __init__(self, tabWidget, helper, *args):
@@ -342,10 +357,13 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
 
         self._anchors = {}
         self._position = []
+        self._anchor_status = [False] * 8
         self._clear_state()
         self._refs = []
 
         self._display_mode = DisplayMode.estimated_position
+
+        self._anchor_position_wizard_dialog = None
 
         # Always wrap callbacks from Crazyflie API though QT Signal/Slots
         # to avoid manipulating the UI when rendering it
@@ -353,16 +371,45 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
         self._disconnected_signal.connect(self._disconnected)
         self._anchor_range_signal.connect(self._anchor_range_received)
         self._position_signal.connect(self._position_received)
+        self._loco_sys_signal.connect(self._loco_sys_received)
         self._anchor_position_signal.connect(self._anchor_positions_updated)
 
-        self._id_anchor_button.clicked.connect(
+        self._id_anchor_button.toggled.connect(
             lambda enabled:
-            self._set_display_mode(DisplayMode.identify_anchor)
+            self._do_when_checked(
+                enabled,
+                self._set_display_mode,
+                DisplayMode.identify_anchor)
         )
 
-        self._estimated_postion_button.clicked.connect(
+        self._estimated_postion_button.toggled.connect(
             lambda enabled:
-            self._set_display_mode(DisplayMode.estimated_position)
+            self._do_when_checked(
+                enabled,
+                self._set_display_mode,
+                DisplayMode.estimated_position)
+        )
+
+        self._mode_auto.toggled.connect(
+            lambda enabled: self._request_mode(enabled, self.LOCO_MODE_AUTO)
+        )
+
+        self._mode_twr.toggled.connect(
+            lambda enabled: self._request_mode(enabled, self.LOCO_MODE_TWR)
+        )
+
+        self._mode_tdoa.toggled.connect(
+            lambda enabled: self._request_mode(enabled, self.LOCO_MODE_TDOA)
+        )
+
+        self._current_requested_mode = self.LOCO_MODE_AUTO
+
+        self._enable_mode_buttons(False)
+        self._switch_mode_button.setEnabled(False)
+
+        self._switch_mode_button.clicked.connect(
+            lambda enabled:
+            self._send_anchor_mode()
         )
 
         self._anchor_pos_ui = {}
@@ -381,6 +428,11 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
 
         self._show_all_button.clicked.connect(self._scale_and_center_graphs)
 
+        self._pos_estimate_button.clicked.connect(
+            self._show_anchor_postion_wizard_dialog
+        )
+        self._pos_estimate_button.setEnabled(False)
+
         # Connect the Crazyflie API callbacks to the signals
         self._helper.cf.connected.add_callback(
             self._connected_signal.emit)
@@ -390,6 +442,8 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
 
         self._set_up_plots()
 
+        self.is_loco_deck_active = False
+
         self._graph_timer = QTimer()
         self._graph_timer.setInterval(1000 / self.FPS)
         self._graph_timer.timeout.connect(self._update_graphics)
@@ -398,6 +452,21 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
         self._anchor_pos_timer = QTimer()
         self._anchor_pos_timer.setInterval(self.UPDATE_PERIOD_ANCHOR_POS)
         self._anchor_pos_timer.timeout.connect(self._poll_anchor_positions)
+
+        self._update_position_label(self._position)
+        self._enable_anchor_pos_ui()
+
+        self._lps_state = self.LOCO_MODE_UNKNOWN
+        self._update_lps_state(self.LOCO_MODE_UNKNOWN)
+
+    def _do_when_checked(self, enabled, fkn, arg):
+        if enabled:
+            fkn(arg)
+
+    def _show_anchor_postion_wizard_dialog(self):
+        self._anchor_position_wizard_dialog = AnchorPositionWizardDialog(
+            self.UPDATE_PERIOD_LOG, self._anchor_status, self._anchor_pos_ui)
+        self._anchor_position_wizard_dialog.show()
 
     def _register_anchor_pos_ui(self, nr):
         x_spin = getattr(self, 'spin_a{}x'.format(nr))
@@ -463,12 +532,25 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
     def _set_display_mode(self, display_mode):
         self._display_mode = display_mode
 
+    def _send_anchor_mode(self):
+        lopo = LoPoAnchor(self._helper.cf)
+
+        # Set the mode from the last to the first anchor
+        # In TDoA mode this ensures that the master anchor is set last
+        for i in reversed(range(8)):
+            if self._current_requested_mode == self.LOCO_MODE_TDOA:
+                lopo.set_mode(i, lopo.MODE_TWR)
+            elif self._current_requested_mode == self.LOCO_MODE_TWR:
+                lopo.set_mode(i, lopo.MODE_TDOA)
+            else:
+                pass
+
     def _clear_state(self):
         self._anchors = {}
         self._position = [0.0, 0.0, 0.0]
-        for i in range(8):
-            label = getattr(self, '_status_a{}'.format(i))
-            label.setStyleSheet(STYLE_NO_BACKGROUND)
+        self._anchor_status = [False] * 8
+        self._disable_ranging_status_indicator()
+        self._id_anchor_button.setEnabled(True)
 
     def _scale_and_center_graphs(self):
         start_bounds = Range(sys.float_info.max, -sys.float_info.max)
@@ -577,7 +659,9 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
         """Callback when the Crazyflie has been connected"""
         logger.debug("Crazyflie connected to {}".format(link_uri))
 
-        if self._helper.cf.mem.ow_search(vid=0xBC, pid=0x06):
+        self.is_loco_deck_active = bool(
+            self._helper.cf.mem.ow_search(vid=0xBC, pid=0x06))
+        if self.is_loco_deck_active:
             try:
                 self._register_logblock(
                     "LoPoTab0",
@@ -599,7 +683,7 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
                         ("ranging", "distance7", "float"),
                     ],
                     self._anchor_range_signal.emit,
-                    self._log_error_signal.emit),
+                    self._log_error_signal.emit)
 
                 self._register_logblock(
                     "LoPoTab2",
@@ -610,13 +694,36 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
                         ("ranging", "state", "uint8_t")
                     ],
                     self._position_signal.emit,
-                    self._log_error_signal.emit),
+                    self._log_error_signal.emit)
+
+                self._register_logblock(
+                    "LoPoSys",
+                    [
+                        ("loco", "mode", "uint8_t")
+                    ],
+                    self._loco_sys_signal.emit,
+                    self._log_error_signal.emit,
+                    update_period=self.UPDATE_PERIOD_LOCO_MODE)
             except KeyError as e:
                 logger.warning(str(e))
             except AttributeError as e:
                 logger.warning(str(e))
 
             self._start_polling_anchor_pos(self._helper.cf)
+            self._enable_mode_buttons(True)
+
+            self._helper.cf.param.add_update_callback(
+                group=self.PARAM_MDOE_GR,
+                name=self.PARAM_MODE_NM,
+                cb=self._loco_mode_updated)
+
+            if self.PARAM_MDOE_GR in self._helper.cf.param.values:
+                if self.PARAM_MODE_NM in \
+                        self._helper.cf.param.values[self.PARAM_MDOE_GR]:
+                    self._loco_mode_updated(
+                        self.PARAM_MODE,
+                        self._helper.cf.param.values[self.PARAM_MDOE_GR][
+                            self.PARAM_MODE_NM])
 
     def _disconnected(self, link_uri):
         """Callback for when the Crazyflie has been disconnected"""
@@ -624,13 +731,19 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
         self._stop_polling_anchor_pos()
         self._clear_state()
         self._update_graphics()
+        self.is_loco_deck_active = False
+        self._pos_estimate_button.setEnabled(False)
+        self._update_lps_state(self.LOCO_MODE_UNKNOWN)
+        self._enable_mode_buttons(False)
+        self._loco_mode_updated('', self.LOCO_MODE_UNKNOWN)
 
-    def _register_logblock(self, logblock_name, variables, data_cb, error_cb):
+    def _register_logblock(self, logblock_name, variables, data_cb, error_cb,
+                           update_period=UPDATE_PERIOD_LOG):
         """Register log data to listen for. One logblock can contain a limited
         number of parameters (6 for floats)."""
-        lg = LogConfig(logblock_name, self.UPDATE_PERIOD_LOG)
+        lg = LogConfig(logblock_name, update_period)
         for variable in variables:
-            if self._is_in_toc(variable):
+            if self._is_in_log_toc(variable):
                 lg.add_variable('{}.{}'.format(variable[0], variable[1]),
                                 variable[2])
 
@@ -640,7 +753,7 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
         lg.start()
         return lg
 
-    def _is_in_toc(self, variable):
+    def _is_in_log_toc(self, variable):
         toc = self._helper.cf.log.toc
         group = variable[0]
         param = variable[1]
@@ -652,6 +765,9 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
             valid, anchor_number = self._parse_range_param_name(name)
             if valid:
                 self._get_anchor(anchor_number).distance = float(value)
+                if self._anchor_position_wizard_dialog:
+                    self._anchor_position_wizard_dialog.range_received(
+                        anchor_number, float(value), timestamp)
 
     def _position_received(self, timestamp, data, logconf):
         """Callback from the logging system when the position is updated."""
@@ -659,17 +775,44 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
             valid, axis = self._parse_position_param_name(name)
             if valid:
                 self._position[axis] = float(value)
-        self._update_ranging_status_indicators(data["ranging.state"])
+
+        for anchor in range(8):
+            bit_field = data["ranging.state"]
+            is_anchor_alive = bool((bit_field >> anchor) & 0x01)
+            self._anchor_status[anchor] = is_anchor_alive
+
+        self._update_ranging_status_indicators(self._anchor_status)
+
+    def _loco_sys_received(self, timestamp, data, logconf):
+        """Callback from the logging system when the loco pos sys config
+        is updated."""
+        if self.PARAM_MODE in data:
+            lps_state = data[self.PARAM_MODE]
+            if lps_state == self.LOCO_MODE_TDOA:
+                if self._id_anchor_button.isEnabled():
+                    if self._id_anchor_button.isChecked():
+                        self._estimated_postion_button.setChecked(True)
+                    self._id_anchor_button.setEnabled(False)
+                self._pos_estimate_button.setEnabled(False)
+            else:
+                if not self._id_anchor_button.isEnabled():
+                    self._id_anchor_button.setEnabled(True)
+                self._pos_estimate_button.setEnabled(self.is_loco_deck_active)
+            self._update_lps_state(lps_state)
 
     def _update_ranging_status_indicators(self, status):
         for i in range(8):
             label = getattr(self, '_status_a{}'.format(i))
-            ok = (status >> i) & 0x01
             exists = i in self._anchors
-            if ok:
+            if status[i]:
                 label.setStyleSheet(STYLE_GREEN_BACKGROUND)
             elif exists:
                 label.setStyleSheet(STYLE_RED_BACKGROUND)
+
+    def _disable_ranging_status_indicator(self):
+        for i in range(8):
+            label = getattr(self, '_status_a{}'.format(i))
+            label.setStyleSheet(STYLE_NO_BACKGROUND)
 
     def _logging_error(self, log_conf, msg):
         """Callback from the log layer when an error occurs"""
@@ -686,9 +829,10 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
         self._anchor_pos_timer.stop()
 
     def _poll_anchor_positions(self):
-        mems = self._helper.cf.mem.get_mems(MemoryElement.TYPE_LOCO)
-        if len(mems) > 0:
-            mems[0].update(self._anchor_position_signal.emit)
+        if self.is_loco_deck_active:
+            mems = self._helper.cf.mem.get_mems(MemoryElement.TYPE_LOCO)
+            if len(mems) > 0:
+                mems[0].update(self._anchor_position_signal.emit)
 
     def _anchor_positions_updated(self, mem):
         """Callback from the memory sub system when the anchor positions
@@ -727,9 +871,67 @@ class LocoPositioningTab(Tab, locopositioning_tab_class):
         return self._anchors[anchor_number]
 
     def _update_graphics(self):
-        if self.is_visible():
+        if self.is_visible() and self.is_loco_deck_active:
             anchors = copy.deepcopy(self._anchors)
             self._plot_yz.update(anchors, self._position, self._display_mode)
             self._plot_xy.update(anchors, self._position, self._display_mode)
             self._plot_xz.update(anchors, self._position, self._display_mode)
+            self._update_position_label(self._position)
             self._enable_anchor_pos_ui()
+
+    def _update_position_label(self, position):
+        if len(position) == 3:
+            coordinate = "({:0.2f}, {:0.2f}, {:0.2f})".format(
+                position[0], position[1], position[2])
+        else:
+            coordinate = '(0.00, 0.00, 0.00)'
+
+        self._status_position.setText(coordinate)
+
+    def _update_lps_state(self, state):
+        if state != self._lps_state:
+            self._update_lps_state_indicator(self._state_twr,
+                                             state == self.LOCO_MODE_TWR)
+            self._update_lps_state_indicator(self._state_tdoa,
+                                             state == self.LOCO_MODE_TDOA)
+        self._lps_state = state
+
+    def _update_lps_state_indicator(self, element, active):
+        if active:
+            element.setStyleSheet(STYLE_GREEN_BACKGROUND)
+        else:
+            element.setStyleSheet(STYLE_NO_BACKGROUND)
+
+    def _enable_mode_buttons(self, enabled):
+        self._mode_auto.setEnabled(enabled)
+        self._mode_twr.setEnabled(enabled)
+        self._mode_tdoa.setEnabled(enabled)
+
+    def _request_mode(self, enabled, mode):
+        if enabled:
+            self._helper.cf.param.set_value(self.PARAM_MODE, str(mode))
+            self._current_requested_mode = mode
+            if mode == self.LOCO_MODE_TWR:
+                self._switch_mode_button.setText("Switch mode to TDoA")
+                self._switch_mode_button.setEnabled(True)
+            elif mode == self.LOCO_MODE_TDOA:
+                self._switch_mode_button.setText("Switch mode to TWR")
+                self._switch_mode_button.setEnabled(True)
+            else:
+                self._switch_mode_button.setEnabled(False)
+
+    def _loco_mode_updated(self, name, value):
+        mode = int(value)
+        if mode == self.LOCO_MODE_AUTO:
+            if not self._mode_auto.isChecked():
+                self._mode_auto.setChecked(True)
+        elif mode == self.LOCO_MODE_TWR:
+            if not self._mode_twr.isChecked():
+                self._mode_twr.setChecked(True)
+        elif mode == self.LOCO_MODE_TDOA:
+            if not self._mode_tdoa.isChecked():
+                self._mode_tdoa.setChecked(True)
+        else:
+            self._mode_auto.setChecked(False)
+            self._mode_twr.setChecked(False)
+            self._mode_tdoa.setChecked(False)
