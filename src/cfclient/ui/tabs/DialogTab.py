@@ -102,10 +102,10 @@ class DialogTab(Tab, dialog_tab_class):
         self.the_port = 0x0
         self.the_channel = -1
         self.line = 1
-        self.lines_max = 10
+        self.lines_max = 80
         self.the_direction = 2
         self.speaking = False
-        self.format = 0
+        self.format = 1
         self.no_header = False
 
         self.Q = QWidget(self.tabWidget)

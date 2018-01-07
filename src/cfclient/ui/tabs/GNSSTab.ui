@@ -399,7 +399,7 @@
      </layout>
     </item>
     <item>
-     <widget class="QCheckBox" name="_ok_messages">
+     <widget class="QLabel" name="label_15">
       <property name="text">
        <string>Messages from GNSS receiver: </string>
       </property>
@@ -412,6 +412,9 @@
         <width>400</width>
         <height>200</height>
        </size>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
       </property>
      </widget>
     </item>

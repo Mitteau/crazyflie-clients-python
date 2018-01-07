@@ -237,7 +237,7 @@ class GNSSTab(Tab, gps_tab_class):
         self.messages.clear()
         self._ok_messages.setChecked(self.show_m)
         self._fixed.setVisible(False)
-        self.helper.cf.param.set_value("gps.messages", str(1))
+        self.helper.cf.param.set_value("gps.messages", str(1))  #### paramètre d'affichage des messages dans l'onglet GNSS
         
 ######################################################################
         """

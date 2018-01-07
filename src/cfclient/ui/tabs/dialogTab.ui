@@ -263,7 +263,7 @@
           </size>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <item>
           <property name="text">
@@ -335,6 +335,9 @@
        </item>
        <item>
         <widget class="QComboBox" name="format">
+         <property name="currentIndex">
+          <number>1</number>
+         </property>
          <item>
           <property name="text">
            <string>Hexa</string>
@@ -551,6 +554,9 @@
         </property>
         <property name="frameShadow">
          <enum>QFrame::Plain</enum>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
         </property>
        </widget>
       </widget>
