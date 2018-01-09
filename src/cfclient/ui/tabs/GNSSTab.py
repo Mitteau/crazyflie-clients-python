@@ -106,7 +106,6 @@ class GNSSTab(Tab, gps_tab_class):
         self._disconnected_signal.connect(self._disconnected)
         self.stop_messages.clicked.connect(self._stop_m)
         self.clear_messages.clicked.connect(self._clear_m)
-        self._ok_messages.clicked.connect(self._ok_m)
         self._init.stateChanged.connect(self._ok_nav)
 
         # Connect the callbacks from the Crazyflie API
@@ -231,22 +230,22 @@ class GNSSTab(Tab, gps_tab_class):
         else:
             logger.warning("Could not setup logging block for GPS_tracking!")
 ####        self._max_speed = 0.0
-        self.helper.cf.param.set_value("gps.messages", "0")
-        self.show_m = True
-        self.run = True
+        self.helper.cf.param.set_value("pm.timeOutSystem", str(0))
+####        self.helper.cf.param.set_value("gps.messages", "0")
+####        self.show_m = True
         self.messages.clear()
-        self._ok_messages.setChecked(self.show_m)
+####        self._ok_messages.setChecked(self.show_m)
         self._fixed.setVisible(False)
-        self.helper.cf.param.set_value("gps.messages", str(1))  #### paramètre d'affichage des messages dans l'onglet GNSS
+####        self.helper.cf.param.set_value("gps.messages", str(1))  #### paramètre d'affichage des messages dans l'onglet GNSS
         
 ######################################################################
-        """
         """
     def _ok_m(self, value) :
         self.show_m = value
         self.helper.cf.param.set_value("gps.messages", str(value))
         self.helper.cf.param.set_value("pm.timeOutSystem", str(1-value))
         self.run = self.show_m
+        """
 
     def _ok_nav(self, value) :
         if value == 2 : self._init_nav = True
@@ -272,6 +271,7 @@ class GNSSTab(Tab, gps_tab_class):
         """Callback for when the Crazyflie has been disconnected"""
         self._fixed.setVisible(False)
         self.cnted = False
+####        self.helper.cf.param.set_value("pm.timeOutSystem", str(1))
 
 ####    def printText(self, text):
 ####        # Make sure we get printouts from the Crazyflie into the log (such as
@@ -315,8 +315,9 @@ class GNSSTab(Tab, gps_tab_class):
         QMessageBox.about(self, "Plot error", "Error when starting log config"
                           " [%s]: %s" % (log_conf.name, msg))
 
+        """
     def _reset_max(self):
-        """Callback from reset button"""
+        """"""Callback from reset button""""""
 ####        self._max_speed = 0.0
 ####        self._speed_max.setText(str(self._max_speed))
         self._long.setText("")
@@ -326,7 +327,7 @@ class GNSSTab(Tab, gps_tab_class):
 ####        self._heading.setText("")
 ####        self._accuracy.setText("")
         self._fix_type.setText("")
-
+"""
     def _log_data_received_b(self, timestamp, data, logconf):
         """Callback when the log layer receives new data"""
 ####        logger.info('Fixed {}'.format(data["gps_base.fixed"]))
@@ -343,9 +344,9 @@ class GNSSTab(Tab, gps_tab_class):
             self.fixed = False
             self.label_3.setEnabled(False)
             self._init.setEnabled
-            self._long.setEnabled(False)
-            self._lat.setEnabled(False)
-            self._height.setEnabled(False)
+            self._long.setEnabled(True)####
+            self._lat.setEnabled(True)####
+            self._height.setEnabled(True)####
 ####        logger.info("n sat {}".format(ns))
         self._g_nbr_locked_sats.setText("%d" % data["gps_base.Pnsat"])
         self._l_nbr_locked_sats.setText("%d" % data["gps_base.Lnsat"])
@@ -375,9 +376,34 @@ class GNSSTab(Tab, gps_tab_class):
         """Callback when the log layer receives new data"""
         le = data["gps_track.EW"]
         longe_d = data["gps_track.lon_d"]
+        logger.info('Longitude  d\' uint32 >{}<'.format(longe_d))
         k = longe_d // 1000 #### nombre de décimales
+        metre_lg = 1852 / (10 ** k)
+        logger.info('k >{}<'.format(k))
         longe_d = longe_d % 1000
         longe_m = data["gps_track.lon_m"] #### minutes * (10 ** k)
+        logger.info('Longitude  m\' uint32 >{}<'.format(longe_m))
+        ld = longe_d
+        if longe_m != 0 : lm = longe_m // (10 ** k) #### cas égal 0 ?
+        else : lm = 0
+####        logger.info('Longitude  m\' uint32 >{}<'.format(lm))
+        l1 = lm * (10 ** k)
+####        logger.info('l1 >{}<'.format(l1))
+        ls = (longe_m - l1) * 6
+        if k > 1 : ldd = 10 ** (k-1)
+        else : ldd = 1 ####!!!!!!!!!!!!!!!!!!!!!!
+####        logger.info('ldd >{}<'.format(ldd))
+        if ls != 0 : ls = ls / ldd
+####        logger.info('ls >{}<'.format(ls))
+
+        te = data["gps_track.NS"]
+        lat_d = data["gps_track.lat_d"]
+        logger.info('Latitude  d\' uint32 >{}<'.format(lat_d))
+        k1 = lat_d // 1000 #### nombre de décimales
+        logger.info('k1 >{}<'.format(k1))
+        lat_d = lat_d % 1000
+        lat_m = data["gps_track.lat_m"]
+        logger.info('Latitude  m\' uint32 >{}<'.format(lat_m))
 
         if self._init_nav == True : #### traiter les degrés !
             if self._init_long :
@@ -385,30 +411,18 @@ class GNSSTab(Tab, gps_tab_class):
                 self._l_m_init = longe_m
                 self._init_long = False
             else :
-                diff_long = (longe_d - self._l_d_init) * 60
-                ecart_X = ((longe_m - self._l_m_init + diff_long) * 1852.) * math.cos(self.lat_d)
+                diff_long_d = (longe_d - self._l_d_init) * 60 * (10 ** k)
+                ecart_X = ((longe_m - self._l_m_init + diff_long) * metre_lg) * math.cos(self.lat_d)
                 self._deltaX.setText("%.2f m." % ecart_X)
-        logger.info('Longitude  d\' uint32 >{}<'.format(longe_d))
-        logger.info('Longitude  m\' uint32 >{}<'.format(longe_m))
-        logger.info('k uint32 >{}<'.format(k))
-        ld = longe_d
-        if longe_m != 0 : lm = longe_m // (10 ** k) #### cas égal 0 ?
-        else : lm = 0
-####        logger.info('Longitude  m\' uint32 >{}<'.format(lm))
-        l1 = lm * (10 ** k)
-        logger.info('l1 >{}<'.format(l1))
-        ls = (longe_m - l1) * 6
-        if k > 1 : ldd = 10 ** (k-1)
-        else : ldd = 1 ####!!!!!!!!!!!!!!!!!!!!!!
-        logger.info('ldd >{}<'.format(ldd))
-        if ls != 0 : ls = ls / ldd
-        logger.info('ls >{}<'.format(ls))
-
-        te = data["gps_track.NS"]
-        lat_d = data["gps_track.lat_d"]
-        k1 = lat_d // 1000 #### nombre de décimales
-        lat_d = lat_d % 1000
-        lat_m = data["gps_track.lat_m"]
+        if self._init_nav == True : #### traiter les degrés !
+            if self._init_lat :
+                self._l_d_init = longe_d
+                self._l_m_init = longe_m
+                self._init_long = False
+            else :
+                diff_long_d = (longe_d - self._l_d_init) * 60 * (10 ** k)
+                ecart_X = ((longe_m - self._l_m_init + diff_long) * metre_lg) * math.cos(self.lat_d)
+                self._deltaX.setText("%.2f m." % ecart_X)
         if self._init_nav == True : #### traiter les degrés !
             if self._init_lat :
                 self._lt_m_init = lat_m
@@ -428,12 +442,28 @@ class GNSSTab(Tab, gps_tab_class):
 
         ht = float(data["gps_track.hMSL"])
         if self._init_nav == True : #### traiter les degrés !
+            if self._init_long :
+                self._l_d_init = longe_d
+                self._l_m_init = longe_m
+                self._init_long = False
+            else :
+                diff_long = (longe_d - self._l_d_init) * 60 * (10 ** k)
+                ecart_X = ((longe_m - self._l_m_init + diff_long) * metre_lg) * math.cos(self.lat_d)
+                self._deltaX.setText("%.1f m." % ecart_X)
+            if self._init_lat :
+                self._lt_d_init = lat_d
+                self._lt_m_init = lat_m
+                self._init_lat = False
+            else :
+                diff_lat = (lat_d - self._lt_d_init) * 60 * (10 ** k)
+                ecart_Y = ((lat_m - self._lt_m_init + diff_lat) * metre_lg) * math.cos(self.lat_d)
+                self._deltaX.setText("%.1f m." % ecart_X)
             if self._init_alt :
                 self._alt_init = ht
                 self._init_alt = False
             else :
                 ecart_Z = (ht - self._alt_init)
-                self._deltaZ.setText("%.2f m." % ecart_Z)
+                self._deltaZ.setText("%.1f m." % ecart_Z)
 
         if self.lat_d != lat_d or self.longe_d != longe_d\
              or self.lat_m != lat_m or self.longe_m != longe_m :
