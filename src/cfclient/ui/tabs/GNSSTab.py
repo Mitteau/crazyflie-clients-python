@@ -122,9 +122,9 @@ class GNSSTab(Tab, gps_tab_class):
         self.lat_m = 0
         self.longe_d = 0
         self.longe_m = 0
-        self.run = True
-        self.buff = []
-        self.show_m = True
+        self.run = False
+######        self.buff = []
+        self.show_m = False
         self.t_gps = QTime()
         self._fixed.setVisible(False)
         self._init_nav = False
@@ -230,13 +230,12 @@ class GNSSTab(Tab, gps_tab_class):
         else:
             logger.warning("Could not setup logging block for GPS_tracking!")
 ####        self._max_speed = 0.0
-        self.helper.cf.param.set_value("pm.timeOutSystem", str(0))
-####        self.helper.cf.param.set_value("gps.messages", "0")
-####        self.show_m = True
+        self.helper.cf.param.set_value("gps.messages", "0")
+        self.show_m = False
+        self.run = True
         self.messages.clear()
 ####        self._ok_messages.setChecked(self.show_m)
         self._fixed.setVisible(False)
-####        self.helper.cf.param.set_value("gps.messages", str(1))  #### paramètre d'affichage des messages dans l'onglet GNSS
         
 ######################################################################
         """
@@ -382,7 +381,19 @@ class GNSSTab(Tab, gps_tab_class):
         logger.info('k >{}<'.format(k))
         longe_d = longe_d % 1000
         longe_m = data["gps_track.lon_m"] #### minutes * (10 ** k)
-        logger.info('Longitude  m\' uint32 >{}<'.format(longe_m))
+
+        if self._init_nav == True : #### traiter les degrés !
+            if self._init_long :
+                self._l_d_init = longe_d
+                self._l_m_init = longe_m
+                self._init_long = False
+            else :
+                diff_long = (longe_d - self._l_d_init) * 60
+                ecart_X = ((longe_m - self._l_m_init + diff_long) * 1852.) * math.cos(self.lat_d)
+                self._deltaX.setText("%.2f m." % ecart_X)
+####        logger.info('Longitude  d\' uint32 >{}<'.format(longe_d))
+####        logger.info('Longitude  m\' uint32 >{}<'.format(longe_m))
+####        logger.info('k uint32 >{}<'.format(k))
         ld = longe_d
         if longe_m != 0 : lm = longe_m // (10 ** k) #### cas égal 0 ?
         else : lm = 0

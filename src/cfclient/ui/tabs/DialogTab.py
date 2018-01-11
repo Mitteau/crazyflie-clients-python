@@ -236,9 +236,17 @@ class DialogTab(Tab, dialog_tab_class):
         if (self.line > self.lines_max) and (self.lines_max >= 0) : 
             self.startButton.setText("Hear")
             self.started = False
+
+
+
+
+
         if pk.header == 0xFF and self.the_port == 0xFF : oui = True
-        elif pk._get_port() == self.the_port : oui = True
-        else : oui = False
+        if pk.header != 0xFF :
+            if pk._get_port() == self.the_port : oui = True
+            else : oui = False
+
+
 
         if (oui or self.the_port  == 0xFE)\
                  and (pk._get_channel() == self.the_channel or self.the_channel < 0)\
