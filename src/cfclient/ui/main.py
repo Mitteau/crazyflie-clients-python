@@ -133,7 +133,10 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         # Restore window size if present in the config file
         try:
             size = Config().get("window_size")
+            x = Config().get("x0")
+            y = Config().get("y0")
             self.resize(size[0], size[1])
+            self.move(x, y)
         except KeyError:
             pass
 
@@ -625,7 +628,10 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
     def closeEvent(self, event):
         self.hide()
         self.cf.close_link()
+        Config().set("x0",self.x())
+        Config().set("y0",self.y())
         Config().save_file()
+        
 
     def resizeEvent(self, event):
         Config().set("window_size", [event.size().width(),
