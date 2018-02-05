@@ -56,6 +56,7 @@ from PyQt5.QtWidgets import QActionGroup
 from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QMenu
+from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QMessageBox
 
 from .dialogs.cf1config import Cf1ConfigDialog
@@ -388,6 +389,19 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             node.setData((m, mux_subnodes))
 
         self._mapping_support = True
+
+        if (not (Config().get("analog"))):
+            abandon=QPushButton()
+            abandon.setText("Exit")
+            avertissement_l = QMessageBox()
+            avertissement_l.setWindowTitle("Joystick")
+            avertissement_l.setText("Warning")
+            avertissement_l.setInformativeText("Is joystick correctly configured?")
+            avertissement_l.addButton("Yes",avertissement_l.AcceptRole)
+            avertissement_l.addButton(abandon,avertissement_l.DestructiveRole)
+            avertissement_l.setIcon(avertissement_l.Critical)
+            abandon.clicked.connect(self.closeAppRequest)
+            avertissement_l.exec()
 
     def interfaceChanged(self, interface):
         if interface == INTERFACE_PROMPT_TEXT:
