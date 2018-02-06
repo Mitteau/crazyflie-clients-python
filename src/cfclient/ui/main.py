@@ -566,6 +566,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             color = COLOR_RED
 
         self.batteryBar.setStyleSheet(progressbar_stylesheet(color))
+        self._aff_volts.setText(("%.3f" % data["pm.vbat"]))
 
     def _connected(self):
         self.uiState = UIState.CONNECTED
