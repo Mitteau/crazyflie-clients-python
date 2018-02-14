@@ -35,6 +35,8 @@ import logging
 
 import cfclient
 
+LOG_DIRECTORY = '/BTCZ'
+
 __author__ = 'Bitcraze AB'
 __all__ = []
 
@@ -68,7 +70,11 @@ def main():
         # Add extra format options for file logger (thread and time)
         formatter = logging.Formatter('%(asctime)s:%(threadName)s:%(name)'
                                       's:%(levelname)s:%(message)s')
-        filename = "debug-%s.log" % datetime.datetime.now()
+        b_path = os.environ['HOME']+LOG_DIRECTORY
+        d_path = b_path + "/crazyflie-logs/"
+        l = list(os.walk(b_path))[0][1]
+        if not "crazyflie-logs" in l : os.system('mkdir '+d_path)
+        filename = d_path+"debug-%s.log" % datetime.datetime.now()
         filehandler = logging.FileHandler(filename)
         filehandler.setLevel(logging.DEBUG)
         filehandler.setFormatter(formatter)
