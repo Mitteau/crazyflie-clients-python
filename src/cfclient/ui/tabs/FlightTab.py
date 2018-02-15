@@ -142,20 +142,21 @@ class FlightTab(Tab, flight_tab_class):
         self.maxAngle.valueChanged.connect(self.maxAngleChanged)
         self.maxYawRate.valueChanged.connect(self.maxYawRateChanged)
         self.uiSetupReadySignal.connect(self.uiSetupReady)
-        self.clientXModeCheckbox.toggled.connect(self.changeXmode)
+####        self.clientXModeCheckbox.toggled.connect(self.changeXmode)
         self.isInCrazyFlightmode = False
         self.uiSetupReady()
 
-        self.clientXModeCheckbox.setChecked(Config().get("client_side_xmode"))
+####        self.clientXModeCheckbox.setChecked(Config().get("client_side_xmode"))
 
-        self.crazyflieXModeCheckbox.clicked.connect(
-            lambda enabled:
-            self.helper.cf.param.set_value("flightmode.x",
-                                           str(enabled)))
-        self.helper.cf.param.add_update_callback(
-            group="flightmode", name="xmode",
-            cb=(lambda name, checked:
-                self.crazyflieXModeCheckbox.setChecked(eval(checked))))
+####        self.crazyflieXModeCheckbox.clicked.connect(
+####            lambda enabled:
+####            self.helper.cf.param.set_value("flightmode.x",
+####                                           str(enabled)))
+
+####        self.helper.cf.param.add_update_callback(
+####            group="flightmode", name="xmode",
+####            cb=(lambda name, checked:
+####                self.crazyflieXModeCheckbox.setChecked(eval(checked))))
 
         self.ratePidRadioButton.clicked.connect(
             lambda enabled:
@@ -177,9 +178,9 @@ class FlightTab(Tab, flight_tab_class):
             cb=(lambda name, checked:
                 self.ratePidRadioButton.setChecked(eval(checked))))
 
-        self.helper.cf.param.add_update_callback(
-            group="cpu", name="flash",
-            cb=self._set_enable_client_xmode)
+####        self.helper.cf.param.add_update_callback(
+####            group="cpu", name="flash",
+####            cb=self._set_enable_client_xmode)
 
         self.helper.cf.param.add_update_callback(
             group="ring", name="headlightEnable",
@@ -222,12 +223,12 @@ class FlightTab(Tab, flight_tab_class):
             self._limiting_updated.emit)
         self._limiting_updated.connect(self._set_limiting_enabled)
 
-    def _set_enable_client_xmode(self, name, value):
-        if eval(value) <= 128:
-            self.clientXModeCheckbox.setEnabled(True)
-        else:
-            self.clientXModeCheckbox.setEnabled(False)
-            self.clientXModeCheckbox.setChecked(False)
+####    def _set_enable_client_xmode(self, name, value):
+####        if eval(value) <= 128:
+####            self.clientXModeCheckbox.setEnabled(True)
+####        else:
+####            self.clientXModeCheckbox.setEnabled(False)
+####            self.clientXModeCheckbox.setChecked(False)
 
     def _set_limiting_enabled(self, rp_limiting_enabled,
                               yaw_limiting_enabled,
@@ -379,7 +380,7 @@ class FlightTab(Tab, flight_tab_class):
         self.ai.setHover(0, self.is_visible())
         self.targetHeight.setEnabled(False)
         self.actualHeight.setEnabled(False)
-        self.clientXModeCheckbox.setEnabled(False)
+####        self.clientXModeCheckbox.setEnabled(False)
         self.logBaro = None
         self.logAltHold = None
         self._led_ring_effect.setEnabled(False)
@@ -539,10 +540,10 @@ class FlightTab(Tab, flight_tab_class):
             self.helper.cf.param.set_value("flightmode.althold", str(enabled))
 
     @pyqtSlot(bool)
-    def changeXmode(self, checked):
-        self.helper.cf.commander.set_client_xmode(checked)
-        Config().set("client_side_xmode", checked)
-        logger.info("Clientside X-mode enabled: %s", checked)
+####    def changeXmode(self, checked):
+####        self.helper.cf.commander.set_client_xmode(checked)
+####        Config().set("client_side_xmode", checked)
+####        logger.info("Clientside X-mode enabled: %s", checked)
 
     def alt1_updated(self, state):
         if state:
