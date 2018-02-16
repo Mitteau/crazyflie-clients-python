@@ -175,6 +175,7 @@ class JoystickReader(object):
         self.assisted_control_updated = Caller()
         self.alt1_updated = Caller()
         self.alt2_updated = Caller()
+        self.connect_updated = Caller()
 
         # Call with 3 bools (rp_limiting, yaw_limiting, thrust_limiting)
         self.limiting_updated = Caller()
@@ -411,6 +412,13 @@ class JoystickReader(object):
                         logger.warning("Exception while doing callback from"
                                        "input-device for estop: {}".format(e))
 
+                if data.toggled.connect:
+                    try:
+                        self.connect_updated.call(data.connect)
+                    except Exception as e:
+                        logger.warning("Exception while doing callback from"
+                                       "input-device for connection: {}".format(e))
+
                 if data.toggled.alt1:
                     try:
                         self.alt1_updated.call(data.alt1)
@@ -466,13 +474,13 @@ class JoystickReader(object):
                 else:
                     # Update the user roll/pitch trim from device
                     if data.toggled.pitchNeg and data.pitchNeg:
-                        self.trim_pitch -= 1
+                        self.trim_pitch -= .2
                     if data.toggled.pitchPos and data.pitchPos:
-                        self.trim_pitch += 1
+                        self.trim_pitch += .2
                     if data.toggled.rollNeg and data.rollNeg:
-                        self.trim_roll -= 1
+                        self.trim_roll -= .2
                     if data.toggled.rollPos and data.rollPos:
-                        self.trim_roll += 1
+                        self.trim_roll += .2
 
                     if data.toggled.pitchNeg or data.toggled.pitchPos or \
                             data.toggled.rollNeg or data.toggled.rollPos:

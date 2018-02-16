@@ -188,6 +188,7 @@ class _JS():
             raise Exception("Joystick device not opened")
 
         self._read_all_events()
+####        logger.info("Entrée manette {}".format([self.axes, self.buttons]))  #### surveillance input
 
         return [self.axes, self.buttons]
 

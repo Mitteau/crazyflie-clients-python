@@ -28,6 +28,7 @@ The main file for the Crazyflie control application.
 """
 import logging
 import sys
+import re
 
 import cfclient
 import cfclient.ui.tabs
@@ -217,6 +218,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         self._input_discovery_signal.connect(self.device_discovery)
         self.joystickReader.device_discovery.add_callback(
             self._input_discovery_signal.emit)
+        self.joystickReader.connect_updated.add_callback(self.connect_updated)
 
         # Hide the 'File' menu on OS X, since its only item, 'Exit', gets
         # merged into the application menu.
@@ -712,6 +714,16 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         else:
             msg = "No input device found"
         self._statusbar_label.setText(msg)
+
+    def connect_updated(self, state):
+        if state:
+            l = self.interfaceCombo.currentText()
+            if re.search("^radio",l):
+                self._connect()
+            else :
+                msg = "Please scan again, no URI defined"
+                warningCaption = "Link"
+                QMessageBox.critical(self, warningCaption, msg)
 
     def _inputdevice_selected(self, checked):
         """Called when a new input device has been selected from the menu. The
