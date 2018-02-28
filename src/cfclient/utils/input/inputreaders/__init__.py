@@ -135,6 +135,9 @@ class InputDevice(InputReaderInterface):
                 pass
             i += 1
 
+        self.data.roll = InputDevice.deadband(self.data.roll, 0.1)
+        self.data.pitch = InputDevice.deadband(self.data.pitch, 0.1)
+                
         if self.limit_rp:
             [self.data.roll, self.data.pitch] = self._scale_rp(self.data.roll,
                                                                self.data.pitch)
@@ -149,3 +152,12 @@ class InputDevice(InputReaderInterface):
             return [axis, buttons, self.data]
         else:
             return self.data
+    @staticmethod
+    def deadband(value, threshold):
+        if abs(value) < threshold:
+            value = 0
+        elif value > 0:
+            value -= threshold
+        elif value < 0:
+            value += threshold
+        return value / (1 - threshold)

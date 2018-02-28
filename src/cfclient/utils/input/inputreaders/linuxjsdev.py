@@ -190,6 +190,7 @@ class _JS():
         self._read_all_events()
 ####        logger.info("Entrée manette {}".format([self.axes, self.buttons]))  #### surveillance input
 
+####        logger.info("Manette {}".format([self.axes, self.buttons]))
         return [self.axes, self.buttons]
 
 
