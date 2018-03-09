@@ -230,7 +230,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             self._show_input_device_config_dialog)
         self.menuItemExit.triggered.connect(self.closeAppRequest)
         self.batteryUpdatedSignal.connect(self._update_battery)
-        self._menuitem_rescandevices.triggered.connect(self._rescan_devices)
+#        self._menuitem_rescandevices.triggered.connect(self._rescan_devices)
         self._menuItem_openconfigfolder.triggered.connect(
             self._open_config_folder)
 
@@ -513,11 +513,11 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             dockToolbox.hide()
             menuItem.setChecked(False)
 
-    def _rescan_devices(self):
-        self._statusbar_label.setText("No inputdevice connected!")
-        self._menu_devices.clear()
-        self._active_device = ""
-        self.joystickReader.stop_input()
+#    def _rescan_devices(self):
+#        self._statusbar_label.setText("No inputdevice connected!")
+#        self._menu_devices.clear()
+#        self._active_device = ""
+#        self.joystickReader.stop_input()
 
         # for c in self._menu_mappings.actions():
         #    c.setEnabled(False)
@@ -634,7 +634,12 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
     def _display_input_device_error(self, error):
         self.cf.close_link()
-        QMessageBox.critical(self, "Input device error", error)
+        if error == "Error while running input device": self.input_deconnection()
+        else: QMessageBox.critical(self, "Input device error", error)
+
+    def input_deconnection(self):
+        QMessageBox.critical(self, "Input device error", "Disconnected?")
+        self.closeAppRequest()
 
     def _mux_selected(self, checked):
         """Called when a new mux is selected. The menu item contains a

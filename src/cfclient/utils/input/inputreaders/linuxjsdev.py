@@ -171,7 +171,7 @@ class _JS():
                 logger.info(str(e))
                 self._f.close()
                 self._f = None
-                raise IOError("Device has been disconnected")
+#                raise IOError("Device has been disconnected")
         except TypeError:
             pass
         except ValueError:
@@ -185,8 +185,8 @@ class _JS():
     def read(self):
         """ Returns a list of all joystick event since the last call """
         if not self._f:
-            raise Exception("Joystick device not opened")
-
+#            raise Exception("Joystick device not opened")
+            return 0
         self._read_all_events()
 
         return [self.axes, self.buttons]
@@ -233,4 +233,6 @@ class Joystick():
 
     def read(self, device_id):
         """ Returns a list of all joystick event since the last call """
-        return self._js[device_id].read()
+        rd = self._js[device_id].read()
+#        logger.info("Dans Joystick : {}".format(rd))
+        return rd

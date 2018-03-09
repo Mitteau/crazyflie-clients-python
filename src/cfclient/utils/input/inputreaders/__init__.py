@@ -105,7 +105,13 @@ class InputDevice(InputReaderInterface):
         self.db = db
 
     def read(self, include_raw=False):
-        [axis, buttons] = self._reader.read(self.id)
+
+#        logger.info("Dans Input Device : {}".format(self._reader.read(self.id)))
+        self._reader.read(self.id) #### Pourquoi deux lectures ?
+        if self._reader.read(self.id) != 0:
+            [axis, buttons] = self._reader.read(self.id)
+        else:
+            return 0
 
         # To support split axis we need to zero all the axis
         self.data.reset_axes()

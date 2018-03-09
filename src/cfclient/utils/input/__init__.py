@@ -360,6 +360,11 @@ class JoystickReader(object):
         """Read input data from the selected device"""
         try:
             data = self._selected_mux.read()
+            if data == 0:
+                self.input_updated.call(0, 0, 0, 0)
+                self.pause_input()
+                self.device_error.call("Error while running input device")
+                return
 
             if data:
                 if data.toggled.assistedControl:
