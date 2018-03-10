@@ -513,17 +513,15 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             dockToolbox.hide()
             menuItem.setChecked(False)
 
-#    def _rescan_devices(self):
-#        self._statusbar_label.setText("No inputdevice connected!")
-#        self._menu_devices.clear()
-#        self._active_device = ""
-#        self.joystickReader.stop_input()
+    def _rescan_devices(self):
+        self._active_device = ""
+####        self.joystickReader.stop_input()
 
-        # for c in self._menu_mappings.actions():
-        #    c.setEnabled(False)
-        # devs = self.joystickReader.available_devices()
-        # if (len(devs) > 0):
-        #    self.device_discovery(devs)
+####        for c in self._menu_mappings.actions():
+####            c.setEnabled(False)
+        devs = self.joystickReader.available_devices()
+        if (len(devs) > 0):
+            self.device_discovery(devs)
 
     def _show_input_device_config_dialog(self):
         self.inputConfig = InputConfigDialogue(self.joystickReader)
@@ -638,8 +636,11 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         else: QMessageBox.critical(self, "Input device error", error)
 
     def input_deconnection(self):
-        QMessageBox.critical(self, "Input device error", "Disconnected?")
-        self.closeAppRequest()
+        self._statusbar_label.setText("No input device connected!")
+        ret = QMessageBox.question(self, "Input device error", "Device probably disconnected.\nReconnect a device before rescanning.\nRescan?")
+        if ret > 0xFFF0:self.closeAppRequest()
+        else:
+            self._rescan_devices()
 
     def _mux_selected(self, checked):
         """Called when a new mux is selected. The menu item contains a
