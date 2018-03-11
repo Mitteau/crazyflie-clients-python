@@ -670,6 +670,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                         dev_node.toggled.emit(True)
 
             self._update_input_device_footer()
+            Config().set("mux_name", mux.name)
 
     def _get_dev_status(self, device):
         msg = "{}".format(device.name)
@@ -731,7 +732,14 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             logger.info("Role of {} is {}".format(device.name,
                                                   role_in_mux))
 
-            Config().set("input_device", str(device.name))
+            if mux.name == "Normal" :
+                Config().set("input_device", str(device.name))
+                Config().set("input_teacher", "")
+                Config().set("input_student", "")
+            else:
+                Config().set("input_device", "")
+                if role_in_mux == "Teacher" : Config().set("input_teacher", device.name)
+                else : Config().set("input_student", device.name)
 
             self._mapping_support = self.joystickReader.start_input(
                 device.name,
