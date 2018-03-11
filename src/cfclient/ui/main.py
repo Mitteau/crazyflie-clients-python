@@ -367,13 +367,34 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         self._all_role_menus = ()
         # Used to filter what new devices to add default mapping to
         self._available_devices = ()
+        self._all_mux = self.joystickReader.available_mux()
+
         # Keep track of mux nodes so we can enable according to how many
         # devices we have
         self._all_mux_nodes = ()
 
+        self.mux = ""
+        self.device_input = ""
+        self.teacher_input = ""
+        self.student_input = ""
+        self.possible = False
+        try:
+            self.mux = Config().get("mux_name")
+            for m in self._all_mux:
+                if m.name == self.mux : self.possible = True
+            if not self.possible :  self.mux = "Normal"
+            if self.mux == "Normal" :
+                self.device_input = Config().get("input_device")
+            else :
+                self.teacher_input = Config().get("input_teacher")
+                self.student_input = Config().get("input_student")
+        except Exception as e:
+            logger.warning("Exception reading mux config [{}]".format(e))
+        logger.info("Mux = {}, I {}, T {}, S {}".format(self.mux, self.device_input, self.teacher_input, self.student_input))
+
         # Check which Input muxes are available
         self._mux_group = QActionGroup(self._menu_inputdevice, exclusive=True)
-        for m in self.joystickReader.available_mux():
+        for m in self._all_mux:
             node = QAction(m.name,
                            self._menu_inputdevice,
                            checkable=True,
