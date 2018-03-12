@@ -363,6 +363,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             dockToolbox.dockToolbox = dockToolbox
             dockToolbox.menuItem = item
 
+        self._mapping_support = True
         # References to all the device sub-menus in the "Input device" menu
         self._all_role_menus = ()
         # Used to filter what new devices to add default mapping to
@@ -373,25 +374,57 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         # devices we have
         self._all_mux_nodes = ()
 
+        # recover saved mux input configuration
         self.mux = ""
         self.device_input = ""
         self.teacher_input = ""
         self.student_input = ""
         self.possible = False
+
         try:
-            self.mux = Config().get("mux_name")
+            self.mux = Config().get("mux_name") ####
+            self.device_input = Config().get("input_device")
             for m in self._all_mux:
                 if m.name == self.mux : self.possible = True
-            if not self.possible :  self.mux = "Normal"
-            if self.mux == "Normal" :
-                self.device_input = Config().get("input_device")
-            else :
+            if self.possible : 
                 self.teacher_input = Config().get("input_teacher")
                 self.student_input = Config().get("input_student")
+            else : self.mux = "Normal"
         except Exception as e:
             logger.warning("Exception reading mux config [{}]".format(e))
-        logger.info("Mux = {}, I {}, T {}, S {}".format(self.mux, self.device_input, self.teacher_input, self.student_input))
 
+
+        logger.info("Mux = {}, I {}, T {}, S {}".format(self.mux, self.device_input, self.teacher_input, self.student_input)) ####
+
+        if self.mux != "Normal" and len(self.teacher_input) > 0 and len(self.student_input) > 0: 
+            self.joystickReader.set_mux(name=self.mux)
+            logger.info("aaaa")
+            a = self.joystickReader.start_input(self.teacher_input, role="Teacher")
+            logger.info("bbbb")
+            b = self.joystickReader.start_input(self.student_input, role="Student")
+            logger.info("cccc")
+            if  a and b :
+               self.joystickReader.set_input_map(self.teacher_input, "")
+               logger.info("dddd")
+               self.joystickReader.set_input_map(self.student_input, "")
+               logger.info("eeee")
+            else :
+               logger.info("0 or 1 input device only!")
+               QMessageBox.critical(self, "Input device error", "1 or more input device not found!")
+               self.closeAppRequest()
+
+        else:
+            self.joystickReader.set_mux(name="Normal")
+            if len(self.device_input) > 0 :
+                self._mapping_support = self.joystickReader.start_input(
+                    self.device_input,
+                    "Device")
+                self.joystickReader.set_input_map(self.device_input, "")
+
+
+        self._update_input_device_footer()
+
+        # Build the input device configuration menu
         # Check which Input muxes are available
         self._mux_group = QActionGroup(self._menu_inputdevice, exclusive=True)
         for m in self._all_mux:
@@ -414,7 +447,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                                           "rolemenu": sub_node},)
             node.setData((m, mux_subnodes))
 
-        self._mapping_support = True
+        logger.info("FFFFFFFFFFFFFFFFFFFFFFin d'initialisation du main")
 
     def disable_input(self, disable):
         """
@@ -690,8 +723,8 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                     if type(dev_node) is QAction and dev_node.isChecked():
                         dev_node.toggled.emit(True)
 
-            self._update_input_device_footer()
-            Config().set("mux_name", mux.name)
+####            self._update_input_device_footer()
+####            Config().set("mux_name", mux.name)
 
     def _get_dev_status(self, device):
         msg = "{}".format(device.name)
@@ -753,6 +786,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             logger.info("Role of {} is {}".format(device.name,
                                                   role_in_mux))
 
+            """
             if mux.name == "Normal" :
                 Config().set("input_device", str(device.name))
                 Config().set("input_teacher", "")
@@ -761,11 +795,12 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                 Config().set("input_device", "")
                 if role_in_mux == "Teacher" : Config().set("input_teacher", device.name)
                 else : Config().set("input_student", device.name)
+            """
 
-            self._mapping_support = self.joystickReader.start_input(
-                device.name,
-                role_in_mux)
-        self._update_input_device_footer()
+####            self._mapping_support = self.joystickReader.start_input(
+####                device.name,
+####                role_in_mux)
+####        self._update_input_device_footer()
 
     def _inputconfig_selected(self, checked):
         """Called when a new configuration has been selected from the menu. The
@@ -777,10 +812,11 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         selected_mapping = str(self.sender().text())
         device = self.sender().data().data()[1]
         self.joystickReader.set_input_map(device.name, selected_mapping)
-        self._update_input_device_footer()
+####        self._update_input_device_footer()
 
     def device_discovery(self, devs):
         """Called when new devices have been added"""
+        selected_node=None
         for menu in self._all_role_menus:
             role_menu = menu["rolemenu"]
             mux_menu = menu["muxmenu"]
@@ -825,33 +861,63 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         for d in devs:
             self._available_devices += (d,)
 
-        # Only enable MUX nodes if we have enough devies to cover
+        for d in self._available_devices : logger.info("Device {}".format(d.name))
+        # Only enable MUX nodes if we have enough devices to cover
         # the roles
+        i = 0
+        selected_menu = self._all_role_menus[0]
         for mux_node in self._all_mux_nodes:
             (mux, sub_nodes) = mux_node.data()
+            logger.info("Mux {}, subnodes {}".format(mux.name, sub_nodes))
+            if mux.name == self.mux :
+                selected_node = mux_node       ####
+                selected_menu = self._all_role_menus[i]
+#####                logger.info("Selected {}".format(selected_node))
+            i += 1
             if len(mux.supported_roles()) <= len(self._available_devices):
                 mux_node.setEnabled(True)
 
+        selected_node.setChecked(True)
         # TODO: Currently only supports selecting default mux
-        if self._all_mux_nodes[0].isEnabled():
-            self._all_mux_nodes[0].setChecked(True)
+####        if self._all_mux_nodes[0].isEnabled():
+####            self._all_mux_nodes[0].setChecked(True)
 
         # If the previous length of the available devies was 0, then select
         # the default on. If that's not available then select the first
         # on in the list.
         # TODO: This will only work for the "Normal" mux so this will be
         #       selected by default
-        if Config().get("input_device") in [d.name for d in devs]:
-            for dev_menu in self._all_role_menus[0]["rolemenu"].actions():
-                if dev_menu.text() == Config().get("input_device"):
-                    dev_menu.setChecked(True)
-        else:
-            # Select the first device in the first mux (will always be "Normal"
-            # mux)
-            self._all_role_menus[0]["rolemenu"].actions()[0].setChecked(True)
-            logger.info("Select first device")
-
-        self._update_input_device_footer()
+        """
+        menu = ""
+        if self.mux == "Normal" :
+            if Config().get("input_device") in [d.name for d in devs]:
+####                     for dev_menu in self._all_role_menus[0]["rolemenu"].actions():
+                for dev_menu in selected_menu["rolemenu"].actions():
+                   if dev_menu.text() == Config().get("input_device"):
+                       dev_menu.setChecked(True)
+            else:
+                # Select the first device in the first mux (will always be "Normal"
+                # mux)
+                selected_menu["rolemenu"].actions()[0].setChecked(True)
+                logger.info("Select first device")
+        else :
+####            logger.info("role menu {}".format(selected_menu["rolemenu"].name))
+            if Config().get("input_teacher") in [d.name for d in devs] and \
+               Config().get("input_student") in [d.name for d in devs] :
+               
+               if selected_menu["rolemenu"].name == "Teacher" : 
+                   logger.info("OKKK")
+                   for dev_menu in selected_menu["rolemenu"].actions():
+                       if dev_menu.text() == Config().get("input_teacher"):
+                           dev_menu.setChecked(True)
+            else:
+                # Select the first device in the first mux (will always be "Normal"
+                # mux)
+                selected_menu["rolemenu"].actions()[0].setChecked(True)
+                logger.info("Select first device")
+        """
+        
+####        self._update_input_device_footer()
 
     def _open_config_folder(self):
         QDesktopServices.openUrl(

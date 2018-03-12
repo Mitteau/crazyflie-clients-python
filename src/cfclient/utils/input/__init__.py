@@ -185,6 +185,7 @@ class JoystickReader(object):
         for d in readers.devices():
             if d.name == device_name:
                 return d
+        logger.info("Device {} not found".format(device_name))
         return None
 
     def set_alt_hold_available(self, available):
@@ -300,15 +301,19 @@ class JoystickReader(object):
     def set_input_map(self, device_name, input_map_name):
         """Load and set an input device map with the given name"""
         dev = self._get_device_from_name(device_name)
-        settings = ConfigManager().get_settings(input_map_name)
-
+        if len(input_map_name) < 1 :
+            try :
+                input_map_name = Config().get("device_config_mapping")[device_name]
+            except :
+                pass
+        try :
+            settings = ConfigManager().get_settings(input_map_name)
+        except :  
+            settings = ConfigManager().get_settings("default")
         if settings:
             self.springy_throttle = settings["springythrottle"]
             self._rp_dead_band = settings["rp_dead_band"]
-            self._input_map = ConfigManager().get_config(input_map_name)
-        dev.input_map = self._input_map
-        dev.input_map_name = input_map_name
-        Config().get("device_config_mapping")[device_name] = input_map_name
+####            self._input_map = ConfigManager().get_config(input_map_name)
         dev.set_dead_band(self._rp_dead_band)
 
     def start_input(self, device_name, role="Device", config_name=None):
@@ -316,11 +321,14 @@ class JoystickReader(object):
         Start reading input from the device with name device_name using config
         config_name. Returns True if device supports mapping, otherwise False
         """
+        logger.info("Add device {}, role {}".format(device_name, role))
         try:
             # device_id = self._available_devices[device_name]
             # Check if we supplied a new map, if not use the preferred one
             device = self._get_device_from_name(device_name)
+            if device == None : return False
             self._selected_mux.add_device(device, role)
+            
             # Update the UI with the limiting for this device
             self.limiting_updated.call(device.limit_rp,
                                        device.limit_yaw,
