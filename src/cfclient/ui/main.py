@@ -687,7 +687,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 ####        logger.info("Dans main, map name.... {}".format(device.input_map_name))  ####
         if device.supports_mapping:
             map_name = "No input mapping"
-            logging.info("device.input mapping {}".format(device.input_map))
+####            logging.info("device.input mapping {}".format(device.input_map))
             if device.input_map:
                 map_name = device.input_map_name
             msg += " ({})".format(map_name)

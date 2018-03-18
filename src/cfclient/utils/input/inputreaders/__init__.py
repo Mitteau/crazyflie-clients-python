@@ -108,7 +108,8 @@ class InputDevice(InputReaderInterface):
 
     def read(self, include_raw=False):
 
-####        logger.info("Input map in InputDevice class : {}".format(self.input_map[:10])) #### OK jusque là
+####        logger.info("Input map in InputDevice class : {}".format(self.input_map[:100])) #### OK jusque là
+####        logger.info("Input map in InputDevice class : {}".format(self.input_map[:100])) #### OK jusque là
         [axis, buttons] = self._reader.read(self.id)
 
         # To support split axis we need to zero all the axis
@@ -118,11 +119,12 @@ class InputDevice(InputReaderInterface):
         i = 0
         for a in axis:
             index = "Input.AXIS-%d" % i
-####            logger.info("INDEX  {}".format(i))
+####            logger.info("INDEX  {}, a {}".format(index, a))####
+####            logger.info("Testé {}".format(self.input_map[index]["type"]))####!!!!!!!!!!!!!!!!!!
             try:
                 if self.input_map[index]["type"] == "Input.AXIS":
                     key = self.input_map[index]["key"]
-                    logger.info("Clé de décodage mapping >{}<".format(key))
+####                    logger.info("Clé de décodage mapping >{}<".format(key))
                     axisvalue = a + self.input_map[index]["offset"]
                     axisvalue = axisvalue / self.input_map[index]["scale"]
                     self.data.set(key, axisvalue + self.data.get(key))

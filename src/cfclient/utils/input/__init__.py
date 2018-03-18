@@ -306,32 +306,43 @@ class JoystickReader(object):
     def set_input_map(self, device_name, input_map_name):
         """Load and set an input device map with the given name"""
         dev = self._get_device_from_name(device_name)
-####        logger.info("Map demandée {}".format(input_map_name))####
-        if len(input_map_name) < 1 :
+        im_name = input_map_name
+####        logger.info("Map demandée {}".format(im_name))####
+        if len(im_name) < 1 :
             try :
-                input_map_name = Config().get("device_config_mapping")[device_name]
+                im_name = Config().get("device_config_mapping")[device_name]
             except :
                 pass
-####        logger.info("Map obtenue {}".format(input_map_name))####
+####        logger.info("Map obtenue {}".format(im_name))####
+
+
+
         try :
-            settings = ConfigManager().get_settings(input_map_name)
-            dev.input_map_name = input_map_name
+            settings = ConfigManager().get_settings(im_name)
             if not settings :
                 settings = ConfigManager().get_settings("Default")
-                dev.input_map_name = "Default"
+                dev.im_name = "Default"
         except :  
             logger.debug("Error reading mapping json file!")
 ####        logger.info("Settings obtained for {}".format(settings["name"]))
-        dev.input_map = dev.input_map_name
+
+
+
         if settings:
             self.springy_throttle = settings["springythrottle"]
             self._rp_dead_band = settings["rp_dead_band"]
+            self._input_map = ConfigManager().get_config(im_name)
         else :
             logger.info("No mapping setting !!!!!!!!!")
 ####            self._input_map = ConfigManager().get_config(input_map_name)
 ####        logger.info("Settings.B.....{}".format(settings[name]))
+
+
+        dev.input_map = self._input_map
+        dev.input_map_name = im_name
+####        Config().get("device_config_mapping")[device_name] = input_map_name
         dev.set_dead_band(self._rp_dead_band)
-        self._input_map = settings
+
 ####        logger.info("Dans input, map name.... {}".format(dev.input_map_name))  ####
 ####        logger.info("Dans input, map name.... {}".format(self._input_map["name"]))  ####
 
@@ -388,7 +399,7 @@ class JoystickReader(object):
         """Read input data from the selected device"""
         try:
             data = self._selected_mux.read()
-####            logger.info("Input values JoystickReader {}".format(data.roll)) #### 
+####            logger.info("Input values JoystickReader {}".format(data)) #### 
 
             if data:
                 if data.toggled.assistedControl:
