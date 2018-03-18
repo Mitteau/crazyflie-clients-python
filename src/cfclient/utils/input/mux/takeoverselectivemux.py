@@ -66,7 +66,7 @@ class TakeOverSelectiveMux(InputMux):
                     for key in self._muxing[self._slave]:
                         dm.set(key, ds.get(key))
 
-                logger.info("dm = {}".format(dm))
+####                logger.info("dm = {}".format(dm))
                 return dm
             else:
                 return None

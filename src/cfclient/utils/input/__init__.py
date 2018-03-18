@@ -322,7 +322,7 @@ class JoystickReader(object):
         except :  
             logger.debug("Error reading mapping json file!")
 ####        logger.info("Settings obtained for {}".format(settings["name"]))
-####        dev.input_map = dev.input_map_name
+        dev.input_map = dev.input_map_name
         if settings:
             self.springy_throttle = settings["springythrottle"]
             self._rp_dead_band = settings["rp_dead_band"]

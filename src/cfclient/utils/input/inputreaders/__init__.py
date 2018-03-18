@@ -128,7 +128,7 @@ class InputDevice(InputReaderInterface):
                     self.data.set(key, axisvalue + self.data.get(key))
             except (KeyError, TypeError):
                 pass
-                logger.info("Erreur table de mapping") ####
+####                logger.info("Erreur table de mapping") ####
             i += 1
 
         # Workaround for fixing issues during mapping (remapping buttons while
@@ -148,7 +148,7 @@ class InputDevice(InputReaderInterface):
             i += 1
 
 ####        logger.info("Input device , values {}".format( [axis])) #### OK jusque là
-        logger.info("Input device values {} - {} - {} - {}".format(self.data.roll, self.data.pitch, self.data.yaw, self.data.thrust)) #### 
+####        logger.info("Input device values {} - {} - {} - {}".format(self.data.roll, self.data.pitch, self.data.yaw, self.data.thrust)) #### 
         self.data.roll = InputDevice.deadband(self.data.roll, self.db)
         self.data.pitch = InputDevice.deadband(self.data.pitch, self.db)
 

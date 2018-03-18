@@ -62,7 +62,7 @@ class InputMux(object):
         # Open the new device before attaching it to a role
         dev.open()
         self.role_devs[role] = dev
-        logger.info("Dans l'ouverture du périf role {}, dev {}".format(role, self.role_devs[role].name))
+        logger.info("Dans l'ouverture du périf role {}, dev {}".format(role, self.role_devs[role].name)) ####
 
     def supported_roles(self):
 ####        logger.info("Liste des clés de roles dans mux {}".format(list(self.role_devs.keys()))) ####
