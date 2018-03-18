@@ -77,6 +77,7 @@ def devices():
                 available_devices.append(InputDevice(dev["name"],
                                                      dev["id"],
                                                      r))
+####    logger.info("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOonypasse")
     return available_devices
 
 
@@ -97,6 +98,7 @@ class InputDevice(InputReaderInterface):
     def open(self):
         # TODO: Reset data?
         self._reader.open(self.id)
+####        logger.info("Self.id {}".format(self.id))
 
     def close(self):
         self._reader.close(self.id)
@@ -105,22 +107,28 @@ class InputDevice(InputReaderInterface):
         self.db = db
 
     def read(self, include_raw=False):
+
+####        logger.info("Input map in InputDevice class : {}".format(self.input_map[:10])) #### OK jusque là
         [axis, buttons] = self._reader.read(self.id)
 
         # To support split axis we need to zero all the axis
         self.data.reset_axes()
+####        logger.info("Contenu settings : {}".format(self.input_map[0][0:12]))
 
         i = 0
         for a in axis:
             index = "Input.AXIS-%d" % i
+####            logger.info("INDEX  {}".format(i))
             try:
                 if self.input_map[index]["type"] == "Input.AXIS":
                     key = self.input_map[index]["key"]
+                    logger.info("Clé de décodage mapping >{}<".format(key))
                     axisvalue = a + self.input_map[index]["offset"]
                     axisvalue = axisvalue / self.input_map[index]["scale"]
                     self.data.set(key, axisvalue + self.data.get(key))
             except (KeyError, TypeError):
                 pass
+                logger.info("Erreur table de mapping") ####
             i += 1
 
         # Workaround for fixing issues during mapping (remapping buttons while
@@ -139,6 +147,8 @@ class InputDevice(InputReaderInterface):
                 pass
             i += 1
 
+####        logger.info("Input device , values {}".format( [axis])) #### OK jusque là
+        logger.info("Input device values {} - {} - {} - {}".format(self.data.roll, self.data.pitch, self.data.yaw, self.data.thrust)) #### 
         self.data.roll = InputDevice.deadband(self.data.roll, self.db)
         self.data.pitch = InputDevice.deadband(self.data.pitch, self.db)
 

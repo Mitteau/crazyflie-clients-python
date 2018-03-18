@@ -42,11 +42,13 @@ class NoMux(InputMux):
     def __init__(self, *args):
         super(NoMux, self).__init__(*args)
         self.name = "Normal"
-        self._devs = {"Device": None}
+        self.role_devs = {"Device": None}
 
     def read(self):
-        if self._devs["Device"]:
-            data = self._devs["Device"].read()
+####        logger.info("DDD dans nomux.read device {}".format(self.role_devs["Device"].name)) ####OK jusque là
+        if self.role_devs["Device"]:
+            data = self.role_devs["Device"].read() ####include_raw=True
+####            logger.info("In nomux input values {}".format(data.roll)) #### 
 
             return data
         else:

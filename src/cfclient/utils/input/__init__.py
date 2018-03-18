@@ -146,8 +146,7 @@ class JoystickReader(object):
         self._read_timer = PeriodicTimer(INPUT_READ_PERIOD, self.read_input)
 
         if do_device_discovery:
-            self._discovery_timer = PeriodicTimer(1.0,
-                                                  self._do_device_discovery)
+            self._discovery_timer = PeriodicTimer(1.0, self._do_device_discovery)
             self._discovery_timer.start()
 
         # Check if user config exists, otherwise copy files
@@ -185,7 +184,8 @@ class JoystickReader(object):
         for d in readers.devices():
             if d.name == device_name:
                 return d
-        logger.info("Device {} not found".format(device_name))
+####        logger.info("Device {} not found".format(device_name))
+
         return None
 
     def set_alt_hold_available(self, available):
@@ -217,6 +217,7 @@ class JoystickReader(object):
             self._selected_mux = mux
 
         old_mux.close()
+####        self._selected_mux.devices()
 
         logger.info("Selected MUX: {}".format(self._selected_mux.name))
 
@@ -298,35 +299,54 @@ class JoystickReader(object):
         if self._input_device:
             self._input_device.input_map = input_map
 
+    def get_input_map(self, device_name) :
+        dev = self._get_device_from_name(device_name)
+        return dev.input_map_name
+
     def set_input_map(self, device_name, input_map_name):
         """Load and set an input device map with the given name"""
         dev = self._get_device_from_name(device_name)
+####        logger.info("Map demandée {}".format(input_map_name))####
         if len(input_map_name) < 1 :
             try :
                 input_map_name = Config().get("device_config_mapping")[device_name]
             except :
                 pass
+####        logger.info("Map obtenue {}".format(input_map_name))####
         try :
             settings = ConfigManager().get_settings(input_map_name)
+            dev.input_map_name = input_map_name
+            if not settings :
+                settings = ConfigManager().get_settings("Default")
+                dev.input_map_name = "Default"
         except :  
-            settings = ConfigManager().get_settings("default")
+            logger.debug("Error reading mapping json file!")
+####        logger.info("Settings obtained for {}".format(settings["name"]))
+####        dev.input_map = dev.input_map_name
         if settings:
             self.springy_throttle = settings["springythrottle"]
             self._rp_dead_band = settings["rp_dead_band"]
+        else :
+            logger.info("No mapping setting !!!!!!!!!")
 ####            self._input_map = ConfigManager().get_config(input_map_name)
+####        logger.info("Settings.B.....{}".format(settings[name]))
         dev.set_dead_band(self._rp_dead_band)
+        self._input_map = settings
+####        logger.info("Dans input, map name.... {}".format(dev.input_map_name))  ####
+####        logger.info("Dans input, map name.... {}".format(self._input_map["name"]))  ####
 
     def start_input(self, device_name, role="Device", config_name=None):
         """
         Start reading input from the device with name device_name using config
         config_name. Returns True if device supports mapping, otherwise False
         """
-        logger.info("Add device {}, role {}".format(device_name, role))
+####        logger.info("AAAAAAAAAAAAAAAAAdd device {}, role {}".format(device_name, role)) ####
         try:
             # device_id = self._available_devices[device_name]
             # Check if we supplied a new map, if not use the preferred one
             device = self._get_device_from_name(device_name)
             if device == None : return False
+####            logger.info("IIIIIIIIci")
             self._selected_mux.add_device(device, role)
             
             # Update the UI with the limiting for this device
@@ -368,6 +388,7 @@ class JoystickReader(object):
         """Read input data from the selected device"""
         try:
             data = self._selected_mux.read()
+####            logger.info("Input values JoystickReader {}".format(data.roll)) #### 
 
             if data:
                 if data.toggled.assistedControl:

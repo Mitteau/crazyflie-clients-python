@@ -138,6 +138,7 @@ class InputReaderInterface(object):
 
     def read(self):
         """Read input from the selected device."""
+        logger.info("In inputreader interface input values {}".format(data.roll)) #### 
         return None
 
     def close(self):

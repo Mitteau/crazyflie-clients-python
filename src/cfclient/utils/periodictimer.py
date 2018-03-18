@@ -67,7 +67,7 @@ class PeriodicTimer:
             self._thread = None
 
 
-class _PeriodicTimerThread(Thread):
+class _PeriodicTimerThread(Thread): #### Introduire un timeout (recherche des périphériques d'entrée)
 
     def __init__(self, period, caller):
         super(_PeriodicTimerThread, self).__init__()
