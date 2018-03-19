@@ -74,7 +74,6 @@ class _PeriodicTimerThread(Thread): #### Introduire un timeout (recherche des p√
         self._period = period
         self._callbacks = caller
         self._stop = False
-
     def stop(self):
         self._stop = True
 

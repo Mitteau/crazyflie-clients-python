@@ -124,6 +124,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
     _input_device_error_signal = pyqtSignal(str)
     _input_discovery_signal = pyqtSignal(object)
     _log_error_signal = pyqtSignal(object, str)
+    _device_timeout_signal = pyqtSignal(str)
 
     def __init__(self, *args):
         super(MainUI, self).__init__(*args)
@@ -210,9 +211,14 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             self._display_input_device_error)
         self.joystickReader.device_error.add_callback(
             self._input_device_error_signal.emit)
+
         self._input_discovery_signal.connect(self.device_discovery)
         self.joystickReader.device_discovery.add_callback(
             self._input_discovery_signal.emit)
+
+        self._device_timeout_signal.connect(self.device_search_timeout)
+        self.joystickReader.device_search_timeout.add_callback(
+            self._device_timeout_signal.emit)
 
         # Hide the 'File' menu on OS X, since its only item, 'Exit', gets
         # merged into the application menu.
@@ -680,7 +686,9 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                         dev_node.toggled.emit(True)
 
             self._update_input_device_footer()
-####            Config().set("mux_name", mux.name)
+            Config().set("mux_name", mux.name)
+
+        self._update_input_device_footer()
 
     def _get_dev_status(self, device):
         msg = "{}".format(device.name)
@@ -744,7 +752,6 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             logger.info("Role of {} is {}".format(device.name,
                                                   role_in_mux))
 
-            """
             if mux.name == "Normal" :
                 Config().set("input_device", str(device.name))
                 Config().set("input_teacher", "")
@@ -753,12 +760,11 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                 Config().set("input_device", "")
                 if role_in_mux == "Teacher" : Config().set("input_teacher", device.name)
                 else : Config().set("input_student", device.name)
-            """
 
 ####            self._mapping_support = self.joystickReader.start_input(
 ####                device.name,
 ####                role_in_mux)
-####        self._update_input_device_footer()
+        self._update_input_device_footer()
 
     def _inputconfig_selected(self, checked):
         """Called when a new configuration has been selected from the menu. The
@@ -769,9 +775,10 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
         selected_mapping = str(self.sender().text())
         device = self.sender().data().data()[1]
-        logger.info("OUI ???")
+        logger.info("OUI ???") ####
         self.joystickReader.set_input_map(device.name, selected_mapping)
-####        self._update_input_device_footer()
+
+        self._update_input_device_footer()
 
 
 
@@ -833,14 +840,16 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
         if self.mux_name != "Normal" and len(self.teacher_input) > 0 and len(self.student_input) > 0 : 
             self.joystickReader.set_mux(name=self.mux_name)
-        elif len(self.device_input) > 0 :
-            self.joystickReader.set_mux(name="Normal")
-            self.mux_name = "Normal"
-        else:
-            logger.debug("No input device found!")
-            QMessageBox.critical(self, "Input device error", "No input device found!\nClient exit.") #### revoir !
-            self.closeAppRequest()
-        self._update_input_device_footer()
+        else :
+            QMessageBox.warning(self, "Input device error", "Needs at least two input devices defined!\nPlease choose a new configuration.")
+        if self.mux_name == "Normal" :
+            if len(self.device_input) > 0 :
+                 self.joystickReader.set_mux(name="Normal")
+            else:
+                logger.debug("No input device found when reading saved input configuration!")
+                QMessageBox.critical(self, "Input device error", "No input device found!\nPlease choose one input device.")
+####                self.closeAppRequest()
+####        self._update_input_device_footer()
 
         # Build the input device configuration menu
         # Check which Input muxes are available
@@ -850,8 +859,8 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                            self._menu_inputdevice,
                            checkable=True,
                            enabled=False)
+            node.setEnabled(True)
             if m.name == self.mux_name :
-                node.setEnabled(True)
                 node.setChecked(True)
             self._mux_group.addAction(node)
             self._menu_inputdevice.addAction(node)
@@ -872,17 +881,10 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             
 ####            if m.name == self.mux : m.devices() #### ?????????????????????
 
-
-
-
-
-    def add_mapping(self) :
-        pass
-                
-
-
-
-
+    def device_search_timeout(self, msg) :
+        QMessageBox.warning(self, "Input device error", "Search of devices reaches timeout!\nClient exit.")
+        self.closeAppRequest()
+        #### ????? provoquer une recherche après branchement
 
     def device_discovery(self, devs):
         """Called when new devices have been added"""

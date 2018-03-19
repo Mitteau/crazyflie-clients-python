@@ -147,7 +147,9 @@ class JoystickReader(object):
 
         if do_device_discovery:
             self._discovery_timer = PeriodicTimer(1.0, self._do_device_discovery)
+            self._discovery_outtimer = PeriodicTimer(20., self._halt_device_discovery)
             self._discovery_timer.start()
+            self._discovery_outtimer.start()
 
         # Check if user config exists, otherwise copy files
         if not os.path.exists(ConfigManager().configs_dir):
@@ -175,6 +177,7 @@ class JoystickReader(object):
         self.assisted_control_updated = Caller()
         self.alt1_updated = Caller()
         self.alt2_updated = Caller()
+        self.device_search_timeout = Caller()
 
         # Call with 3 bools (rp_limiting, yaw_limiting, thrust_limiting)
         self.limiting_updated = Caller()
@@ -191,6 +194,15 @@ class JoystickReader(object):
     def set_alt_hold_available(self, available):
         """Set if altitude hold is available or not (depending on HW)"""
         self.has_pressure_sensor = available
+
+    def _halt_device_discovery(self):
+        self._discovery_outtimer.stop()
+        self._discovery_timer.stop()
+        self.device_search_timeout.call("Device search timeout!")
+        logger.info("Time out in the search of input devices.") #### -> debug
+####        QMessageBox.warning(self, "Input device error", "Time out reached in the search of input devices.")
+#### ????????????????????        
+
 
     def _do_device_discovery(self):
         devs = self.available_devices()
