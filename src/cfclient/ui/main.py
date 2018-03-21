@@ -402,13 +402,6 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
         logger.info("Mux = {}, I {}, T {}, S {}".format(self.mux_name, self.device_input, self.teacher_input, self.student_input)) ####
 
-
-
-
-
-
-
-
         logger.info("FFFFFFFFFFFFFFFFFFFFFFin d'initialisation du main")   #### 
 
     def disable_input(self, disable):
@@ -749,6 +742,8 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                             dev_node.setChecked(False)
 
             role_in_mux = str(self.sender().parent().title()).strip()
+            if self.joystickReader.start_input(device.name, role_in_mux) :
+                    self.joystickReader.set_input_map(device.name, "")
             logger.info("Role of {} is {}".format(device.name,
                                                   role_in_mux))
 
@@ -837,17 +832,23 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             QMessageBox.critical(self, "Input device error", "No input device found!\nClient exit.")
             self.closeAppRequest()
         """
+####        logger.info("Entréeeeeeeeeeeeeeeeeeeeeeeee {}, {}".format(
 
-        if self.mux_name != "Normal" and len(self.teacher_input) > 0 and len(self.student_input) > 0 : 
-            self.joystickReader.set_mux(name=self.mux_name)
-        else :
-            QMessageBox.warning(self, "Input device error", "Needs at least two input devices defined!\nPlease choose a new configuration.")
-        if self.mux_name == "Normal" :
+        if self.mux_name != "Normal" :
+            if len(self.teacher_input) > 0 and len(self.student_input) > 0 : 
+                self.joystickReader.set_mux(name=self.mux_name)
+            else :
+                QMessageBox.warning(self, "Input device error", "Needs at least two input devices defined!\nPlease choose a new configuration.")
+        elif self.mux_name == "Normal" :
             if len(self.device_input) > 0 :
                  self.joystickReader.set_mux(name="Normal")
             else:
                 logger.debug("No input device found when reading saved input configuration!")
-                QMessageBox.critical(self, "Input device error", "No input device found!\nPlease choose one input device.")
+                QMessageBox.warning(self, "Input device error", "No input device found!\nPlease choose one input device.")
+        else :
+            QMessageBox.critical(self, "Input device error", "No input configuration found!\nClient exit.")
+            self.closeAppRequest()
+            
 ####                self.closeAppRequest()
 ####        self._update_input_device_footer()
 
@@ -882,7 +883,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 ####            if m.name == self.mux : m.devices() #### ?????????????????????
 
     def device_search_timeout(self, msg) :
-        QMessageBox.warning(self, "Input device error", "Search of devices reaches timeout!\nClient exit.")
+        QMessageBox.warning(self, "Input device error", "Search of devices reached timeout!\nClient exit.")
         self.closeAppRequest()
         #### ????? provoquer une recherche après branchement
 
