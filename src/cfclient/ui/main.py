@@ -386,6 +386,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         self.teacher_input = ""
         self.student_input = ""
         self.possible = False
+        self.mappings = {"": None}
 
         try:
             self.mux_name = Config().get("mux_name") ####
@@ -396,6 +397,12 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                 self.teacher_input = Config().get("input_teacher")
                 self.student_input = Config().get("input_student")
             else : self.mux_name = "Normal"
+            
+            
+            self.mappings = Config().get("device_config_mapping")
+            logger.info("Mappings {}".format(self.mappings)) ####
+            for k in self.mappings.keys() : logger.info("Key {}, say {}".format(k, self.mappings[k])) ####
+            
         except Exception as e:
             logger.warning("Exception reading mux config [{}]".format(e))
 
@@ -734,18 +741,25 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                 map_menu.setEnabled(True)
 
             (mux, sub_nodes) = mux_menu.data()
+            role_in_mux = str(self.sender().parent().title()).strip()
             for role_node in sub_nodes:
                 for dev_node in role_node.children():
                     if type(dev_node) is QAction and dev_node.isChecked():
                         if device.id == dev_node.data()[1].id \
                                 and dev_node is not self.sender():
                             dev_node.setChecked(False)
-
-            role_in_mux = str(self.sender().parent().title()).strip()
+                    for mapping in dev_node.children() :
+                        if mapping == self.mappings[device.name] :
+                            mapping.setChecked(True)
+####                        logger.info("Mappings lus {}".format(mapping.text()))
+####            logger.info("Trouvé mapping {} pour {}".format(self.mappings[device.name], device.name))
             if self.joystickReader.start_input(device.name, role_in_mux) :
+                if device.name in self.mappings.keys() :
+                    self.joystickReader.set_input_map(device.name, self.mappings[device.name])
+                    #### ajouter checked self.mappings[device.name]
+                else :
                     self.joystickReader.set_input_map(device.name, "")
-            logger.info("Role of {} is {}".format(device.name,
-                                                  role_in_mux))
+####            logger.info("Role of {} is {}".format(device.name, role_in_mux))
 
             if mux.name == "Normal" :
                 Config().set("input_device", str(device.name))
@@ -770,7 +784,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
         selected_mapping = str(self.sender().text())
         device = self.sender().data().data()[1]
-        logger.info("OUI ???") ####
+####        logger.info("OUI ???") ####
         self.joystickReader.set_input_map(device.name, selected_mapping)
 
         self._update_input_device_footer()
