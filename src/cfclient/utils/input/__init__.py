@@ -147,7 +147,7 @@ class JoystickReader(object):
 
         if do_device_discovery:
             self._discovery_timer = PeriodicTimer(1.0, self._do_device_discovery)
-            self._discovery_outtimer = PeriodicTimer(40., self._halt_device_discovery)
+            self._discovery_outtimer = PeriodicTimer(20., self._halt_device_discovery)
             self._discovery_timer.start()
             self._discovery_outtimer.start()
 
