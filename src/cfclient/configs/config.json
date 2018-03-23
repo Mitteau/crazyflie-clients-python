@@ -18,7 +18,10 @@
     "enable_debug_driver": false,
     "input_device_blacklist": "(VirtualBox|VMware)",
     "ui_update_period": 100,
-    "enable_zmq_input": false
+    "enable_zmq_input": false,
+    "mux_name": "",
+    "input_teacher": "",
+    "input_student": ""
   },
   "read-only" : {
     "normal_slew_limit": 45,

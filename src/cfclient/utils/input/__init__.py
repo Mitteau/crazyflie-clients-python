@@ -146,9 +146,10 @@ class JoystickReader(object):
         self._read_timer = PeriodicTimer(INPUT_READ_PERIOD, self.read_input)
 
         if do_device_discovery:
-            self._discovery_timer = PeriodicTimer(1.0,
-                                                  self._do_device_discovery)
+            self._discovery_timer = PeriodicTimer(1.0, self._do_device_discovery)
+            self._discovery_outtimer = PeriodicTimer(20., self._halt_device_discovery)
             self._discovery_timer.start()
+            self._discovery_outtimer.start()
 
         # Check if user config exists, otherwise copy files
         if not os.path.exists(ConfigManager().configs_dir):
@@ -176,6 +177,7 @@ class JoystickReader(object):
         self.assisted_control_updated = Caller()
         self.alt1_updated = Caller()
         self.alt2_updated = Caller()
+        self.device_search_timeout = Caller()
 
         # Call with 3 bools (rp_limiting, yaw_limiting, thrust_limiting)
         self.limiting_updated = Caller()
@@ -191,6 +193,12 @@ class JoystickReader(object):
         """Set if altitude hold is available or not (depending on HW)"""
         self.has_pressure_sensor = available
 
+    def _halt_device_discovery(self):
+        self._discovery_outtimer.stop()
+        self._discovery_timer.stop()
+        self.device_search_timeout.call("Device search timeout!")
+        logger.debug("Time out in the search of input devices.")
+
     def _do_device_discovery(self):
         devs = self.available_devices()
 
@@ -202,6 +210,7 @@ class JoystickReader(object):
         if len(devs):
             self.device_discovery.call(devs)
             self._discovery_timer.stop()
+            self._discovery_outtimer.stop()
 
     def available_mux(self):
         return self._mux
@@ -216,7 +225,6 @@ class JoystickReader(object):
             self._selected_mux = mux
 
         old_mux.close()
-
         logger.info("Selected MUX: {}".format(self._selected_mux.name))
 
     def set_assisted_control(self, mode):
@@ -297,18 +305,34 @@ class JoystickReader(object):
         if self._input_device:
             self._input_device.input_map = input_map
 
+    def get_input_map(self, device_name) :
+        dev = self._get_device_from_name(device_name)
+        return dev.input_map_name
+
     def set_input_map(self, device_name, input_map_name):
         """Load and set an input device map with the given name"""
         dev = self._get_device_from_name(device_name)
-        settings = ConfigManager().get_settings(input_map_name)
-
+        im_name = input_map_name
+        if len(im_name) < 1 :
+            try :
+                im_name = Config().get("device_config_mapping")[device_name]
+            except :
+                pass
+        try :
+            settings = ConfigManager().get_settings(im_name)
+            if not settings :
+                settings = ConfigManager().get_settings("Default")
+                dev.im_name = "Default"
+        except :
+            logger.debug("Error reading mapping json file!")
         if settings:
             self.springy_throttle = settings["springythrottle"]
             self._rp_dead_band = settings["rp_dead_band"]
-            self._input_map = ConfigManager().get_config(input_map_name)
+            self._input_map = ConfigManager().get_config(im_name)
+        else :
+            logger.info("No mapping setting !!!!!!!!!")
         dev.input_map = self._input_map
-        dev.input_map_name = input_map_name
-        Config().get("device_config_mapping")[device_name] = input_map_name
+        dev.input_map_name = im_name
         dev.set_dead_band(self._rp_dead_band)
 
     def start_input(self, device_name, role="Device", config_name=None):
@@ -320,6 +344,7 @@ class JoystickReader(object):
             # device_id = self._available_devices[device_name]
             # Check if we supplied a new map, if not use the preferred one
             device = self._get_device_from_name(device_name)
+            if device == None : return False
             self._selected_mux.add_device(device, role)
             # Update the UI with the limiting for this device
             self.limiting_updated.call(device.limit_rp,
@@ -365,7 +390,6 @@ class JoystickReader(object):
                 self.pause_input()
                 self.device_error.call("Error while running input device")
                 return
-
             if data:
                 if data.toggled.assistedControl:
                     if self._assisted_control == \
@@ -476,13 +500,13 @@ class JoystickReader(object):
                 else:
                     # Update the user roll/pitch trim from device
                     if data.toggled.pitchNeg and data.pitchNeg:
-                        self.trim_pitch -= 1
+                        self.trim_pitch -= .2
                     if data.toggled.pitchPos and data.pitchPos:
-                        self.trim_pitch += 1
+                        self.trim_pitch += .2
                     if data.toggled.rollNeg and data.rollNeg:
-                        self.trim_roll -= 1
+                        self.trim_roll -= .2
                     if data.toggled.rollPos and data.rollPos:
-                        self.trim_roll += 1
+                        self.trim_roll += .2
 
                     if data.toggled.pitchNeg or data.toggled.pitchPos or \
                             data.toggled.rollNeg or data.toggled.rollPos:

@@ -77,7 +77,8 @@
           "id": 12,
           "key": "exit",
           "name": "exitapp"
-        }
+        },
+      {"name":"Switch mux", "type":"Input.BUTTON", "id":8, "scale":1, "key":"muxswitch"}
       ]
     }
   }
