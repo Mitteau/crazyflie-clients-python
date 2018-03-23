@@ -39,14 +39,13 @@ logger = logging.getLogger(__name__)
 class InputMux(object):
 
     def __init__(self, input_layer):
-        #### change variable name for clarification
+        # change variable name for clarification
         self.role_devs = {"Device": None}
         self.name = "N/A"
         self.input = input_layer
 
     def _open_new_device(self, dev, role):
         # Silently close device if open as other role
-####        logger.info("Role_devs {}".format(self.role_devs))
         for r in self.role_devs:
             if self.role_devs[r]:
                 if self.role_devs[r] == dev:
@@ -62,14 +61,12 @@ class InputMux(object):
         # Open the new device before attaching it to a role
         dev.open()
         self.role_devs[role] = dev
-####        logger.info("Dans l'ouverture du périf role {}, dev {}".format(role, self.role_devs[role].name)) ####
 
     def supported_roles(self):
-####        logger.info("Liste des clés de roles dans mux {}".format(list(self.role_devs.keys()))) ####
         return list(self.role_devs.keys())
 
     def add_device(self, dev, role):
-        logger.info("Adding device {} to MUX {}, for {}".format(dev.name, self.name, role)) ####  OK jusque là
+        logger.info("Adding device {} to MUX {}, for {}".format(dev.name, self.name, role))
         self._open_new_device(dev, role)
 
     def pause(self):
@@ -82,7 +79,6 @@ class InputMux(object):
             if self.role_devs[d]:
                 devs += (self.role_devs[d], )
         logger.info("Devces {}, nom {}".format(d, d.name))
-####        logger.info("Devces {}".format(d))
         return devs
 
     def resume(self):

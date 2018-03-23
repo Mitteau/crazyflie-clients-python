@@ -57,19 +57,14 @@ class TakeOverSelectiveMux(InputMux):
         }
 
     def read(self):
-####        logger.info("Dans selective mux, master device {}".format(self.role_devs[self._master].name))####OK jusque là
-####        logger.info("Dans selective mux, slave device {}".format(self.role_devs[self._slave].name))####OK jusque là
         try:
             if self.role_devs[self._master] and self.role_devs[self._slave]:
                 dm = self.role_devs[self._master].read()
                 ds = self.role_devs[self._slave].read()
-####                dm = self.role_devs[0].read()
-####                ds = self.role_devs[1].read()
                 if not dm.muxswitch:
                     for key in self._muxing[self._slave]:
                         dm.set(key, ds.get(key))
 
-####                logger.info("dm = {} {} {} {}".format(dm.roll, dm.pitch, dm.yaw, dm.thrust))
                 return dm
             else:
                 return None

@@ -45,10 +45,8 @@ class NoMux(InputMux):
         self.role_devs = {"Device": None}
 
     def read(self):
-####        logger.info("DDD dans nomux.read device {}".format(self.role_devs["Device"].name)) ####OK jusque là
         if self.role_devs["Device"]:
-            data = self.role_devs["Device"].read() ####include_raw=True
-####            logger.info("In nomux input values {}".format(data.roll)) #### 
+            data = self.role_devs["Device"].read()
 
             return data
         else:

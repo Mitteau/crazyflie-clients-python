@@ -187,8 +187,6 @@ class JoystickReader(object):
         for d in readers.devices():
             if d.name == device_name:
                 return d
-####        logger.info("Device {} not found".format(device_name))
-
         return None
 
     def set_alt_hold_available(self, available):
@@ -199,10 +197,7 @@ class JoystickReader(object):
         self._discovery_outtimer.stop()
         self._discovery_timer.stop()
         self.device_search_timeout.call("Device search timeout!")
-        logger.info("Time out in the search of input devices.") #### -> debug
-####        QMessageBox.warning(self, "Input device error", "Time out reached in the search of input devices.")
-#### ????????????????????        
-
+        logger.debug("Time out in the search of input devices.")
 
     def _do_device_discovery(self):
         devs = self.available_devices()
@@ -230,8 +225,6 @@ class JoystickReader(object):
             self._selected_mux = mux
 
         old_mux.close()
-####        self._selected_mux.devices()
-
         logger.info("Selected MUX: {}".format(self._selected_mux.name))
 
     def set_assisted_control(self, mode):
@@ -320,59 +313,39 @@ class JoystickReader(object):
         """Load and set an input device map with the given name"""
         dev = self._get_device_from_name(device_name)
         im_name = input_map_name
-####        logger.info("Map demandée {}".format(im_name))####
         if len(im_name) < 1 :
             try :
                 im_name = Config().get("device_config_mapping")[device_name]
             except :
                 pass
-####        logger.info("Map obtenue {}".format(im_name))####
-
-
-
         try :
             settings = ConfigManager().get_settings(im_name)
             if not settings :
                 settings = ConfigManager().get_settings("Default")
                 dev.im_name = "Default"
-        except :  
+        except :
             logger.debug("Error reading mapping json file!")
-####        logger.info("Settings obtained for {}".format(settings["name"]))
-
-
-
         if settings:
             self.springy_throttle = settings["springythrottle"]
             self._rp_dead_band = settings["rp_dead_band"]
             self._input_map = ConfigManager().get_config(im_name)
         else :
             logger.info("No mapping setting !!!!!!!!!")
-####            self._input_map = ConfigManager().get_config(input_map_name)
-####        logger.info("Settings.B.....{}".format(settings[name]))
-
-
         dev.input_map = self._input_map
         dev.input_map_name = im_name
-####        Config().get("device_config_mapping")[device_name] = input_map_name
         dev.set_dead_band(self._rp_dead_band)
-
-####        logger.info("Dans input, map name.... {}".format(dev.input_map_name))  ####
-####        logger.info("Dans input, map name.... {}".format(self._input_map["name"]))  ####
 
     def start_input(self, device_name, role="Device", config_name=None):
         """
         Start reading input from the device with name device_name using config
         config_name. Returns True if device supports mapping, otherwise False
         """
-####        logger.info("AAAAAAAAAAAAAAAAAdd device {}, role {}".format(device_name, role)) ####
         try:
             # device_id = self._available_devices[device_name]
             # Check if we supplied a new map, if not use the preferred one
             device = self._get_device_from_name(device_name)
             if device == None : return False
-####            logger.info("IIIIIIIIci")
             self._selected_mux.add_device(device, role)
-            
             # Update the UI with the limiting for this device
             self.limiting_updated.call(device.limit_rp,
                                        device.limit_yaw,
@@ -412,8 +385,6 @@ class JoystickReader(object):
         """Read input data from the selected device"""
         try:
             data = self._selected_mux.read()
-####            logger.info("Input values JoystickReader {}".format(data)) #### 
-
             if data:
                 if data.toggled.assistedControl:
                     if self._assisted_control == \
