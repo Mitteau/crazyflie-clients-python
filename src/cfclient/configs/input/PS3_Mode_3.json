@@ -3,6 +3,7 @@
     "inputdevice": {
       "updateperiod": 10,
       "name": "PS3_Mode_3",
+      "rp_dead_band": 0.1,
       "axis": [
         {
           "scale": -1.0,
@@ -76,7 +77,8 @@
           "id": 12,
           "key": "exit",
           "name": "exitapp"
-        }
+        },
+      {"name":"Switch mux", "type":"Input.BUTTON", "id":8, "scale":1, "key":"muxswitch"}
       ]
     }
   }

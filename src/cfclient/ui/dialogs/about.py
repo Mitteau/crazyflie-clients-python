@@ -51,6 +51,7 @@ System: {system}<br>
 Python: {pmajor}.{pminor}.{pmicro}<br>
 Qt: {qt_version}<br>
 PyQt: {pyqt_version}<br>
+Git branch: nexon_scand<br>
 <br>
 <b>Interface status</b><br>
 {interface_status}

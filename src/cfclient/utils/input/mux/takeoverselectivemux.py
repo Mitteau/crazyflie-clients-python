@@ -48,7 +48,7 @@ class TakeOverSelectiveMux(InputMux):
         self._master = "Teacher"
         self._slave = "Student"
         self.name = "Teacher (RP)"
-        self._devs = {self._master: None, self._slave: None}
+        self.role_devs = {self._master: None, self._slave: None}
 
         self._muxing = {
             self._master: ("thrust", "yaw", "estop", "alt1", "alt2", "connect",
@@ -58,9 +58,9 @@ class TakeOverSelectiveMux(InputMux):
 
     def read(self):
         try:
-            if self._devs[self._master] and self._devs[self._slave]:
-                dm = self._devs[self._master].read()
-                ds = self._devs[self._slave].read()
+            if self.role_devs[self._master] and self.role_devs[self._slave]:
+                dm = self.role_devs[self._master].read()
+                ds = self.role_devs[self._slave].read()
                 if not dm.muxswitch:
                     for key in self._muxing[self._slave]:
                         dm.set(key, ds.get(key))

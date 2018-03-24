@@ -1,7 +1,8 @@
 {
   "inputconfig": {
     "inputdevice":
-    {"name": "Xbox 360 wireless left-handed, JCM", "updateperiod":10,
+    {"name": "Xbox 360 wireless left-handed RP, JCM", "updateperiod":10,
+     "rp_dead_band": 0.12,
      "axis": [
           {"name":"Roll", "type":"Input.AXIS", "id":0, "scale":1.0, "key":"roll"},
           {"name":"Pitch", "type":"Input.AXIS", "id":1, "scale":-1.0, "key":"pitch"},
@@ -17,7 +18,7 @@
           {"name":"Pitch Cal-", "type":"Input.BUTTON", "id":13, "scale":1, "key":"pitchPos"},
           {"name":"Roll Cal +", "type":"Input.BUTTON", "id":12, "scale":1, "key":"rollPos"},
           {"name":"Roll Cal -", "type":"Input.BUTTON", "id":11, "scale":-1, "key":"rollNeg"},
-          {"name":"killswitch", "type":"Input.BUTTON", "id":6, "scale":1, "key":"estop"}
+          {"name":"Switch mux", "type":"Input.BUTTON", "id":6, "scale":1, "key":"muxswitch"}
      ]}
   }
 }

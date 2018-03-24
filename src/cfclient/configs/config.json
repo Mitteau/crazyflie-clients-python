@@ -20,6 +20,9 @@
     "ui_update_period": 100,
     "enable_zmq_input": false,
     "analog": false
+    "mux_name": "",
+    "input_teacher": "",
+    "input_student": ""
   },
   "read-only" : {
     "normal_slew_limit": 45,

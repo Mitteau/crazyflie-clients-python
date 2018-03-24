@@ -68,15 +68,20 @@ for reader in input_readers:
         logger.info("Could not initialize [{}]: {}".format(reader, e))
 
 
-def devices():
+#### def devices(rescan):
+def devices() :
     # Todo: Support rescanning and adding/removing devices
-    if len(available_devices) == 0:
+####    if len(available_devices)  > 0 : available_devices.clear()#### or rescan :
+    if len(available_devices)  == 0 : #### or rescan :
         for r in initialized_readers:
+            logger.info("Reader {}".format(r)) ####
             devs = r.devices()
             for dev in devs:
                 available_devices.append(InputDevice(dev["name"],
                                                      dev["id"],
                                                      r))
+        
+                logger.info("Liste devices {}".format(dev["name"])) ####
     return available_devices
 
 
@@ -92,16 +97,26 @@ class InputDevice(InputReaderInterface):
         self.limit_rp = True
         self.limit_thrust = True
         self.limit_yaw = True
+        self.db = 0.
 
     def open(self):
-        # TODO: Reset data?
+        # TODO: Reset data? (self.id = dev_id)
         self._reader.open(self.id)
 
     def close(self):
         self._reader.close(self.id)
 
+    def set_dead_band(self, db):
+        self.db = db
+
     def read(self, include_raw=False):
-        [axis, buttons] = self._reader.read(self.id)
+
+#        logger.info("Dans Input Device : {}".format(self._reader.read(self.id)))
+        self._reader.read(self.id) #### Pourquoi deux lectures ?
+        if self._reader.read(self.id) != 0:
+            [axis, buttons] = self._reader.read(self.id)
+        else:
+            return 0
 
         # To support split axis we need to zero all the axis
         self.data.reset_axes()
@@ -135,6 +150,9 @@ class InputDevice(InputReaderInterface):
                 pass
             i += 1
 
+        self.data.roll = InputDevice.deadband(self.data.roll, self.db)
+        self.data.pitch = InputDevice.deadband(self.data.pitch, self.db)
+
         if self.limit_rp:
             [self.data.roll, self.data.pitch] = self._scale_rp(self.data.roll,
                                                                self.data.pitch)
@@ -149,3 +167,13 @@ class InputDevice(InputReaderInterface):
             return [axis, buttons, self.data]
         else:
             return self.data
+
+    @staticmethod
+    def deadband(value, threshold):
+        if abs(value) < threshold:
+            value = 0
+        elif value > 0:
+            value -= threshold
+        elif value < 0:
+            value += threshold
+        return value / (1 - threshold)

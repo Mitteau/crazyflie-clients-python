@@ -171,7 +171,7 @@ class _JS():
                 logger.info(str(e))
                 self._f.close()
                 self._f = None
-                raise IOError("Device has been disconnected")
+#                raise IOError("Device has been disconnected")
         except TypeError:
             pass
         except ValueError:
@@ -185,8 +185,8 @@ class _JS():
     def read(self):
         """ Returns a list of all joystick event since the last call """
         if not self._f:
-            raise Exception("Joystick device not opened")
-
+#            raise Exception("Joystick device not opened")
+            return 0
         self._read_all_events()
 ####        logger.info("Entrée manette {}".format([self.axes, self.buttons]))  #### surveillance input
 
@@ -210,11 +210,13 @@ class Joystick():
         found).
         """
 
+        logger.info("nbr devices {}".format(len(self._devices))) ####
         if len(self._devices) == 0:
             syspaths = glob.glob("/sys/class/input/js*")
 
             for path in syspaths:
                 device_id = int(os.path.basename(path)[2:])
+                logger.info("dans joystick classe device id {}".format(device_id))
                 with open(path + "/device/name") as namefile:
                     name = namefile.read().strip()
                 self._js[device_id] = _JS(device_id, name)
@@ -234,4 +236,6 @@ class Joystick():
 
     def read(self, device_id):
         """ Returns a list of all joystick event since the last call """
-        return self._js[device_id].read()
+        rd = self._js[device_id].read()
+#        logger.info("Dans Joystick : {}".format(rd))
+        return rd
