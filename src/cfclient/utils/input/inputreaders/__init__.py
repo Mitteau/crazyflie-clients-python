@@ -68,15 +68,20 @@ for reader in input_readers:
         logger.info("Could not initialize [{}]: {}".format(reader, e))
 
 
-def devices():
+#### def devices(rescan):
+def devices() :
     # Todo: Support rescanning and adding/removing devices
-    if len(available_devices) == 0:
+####    if len(available_devices)  > 0 : available_devices.clear()#### or rescan :
+    if len(available_devices)  == 0 : #### or rescan :
         for r in initialized_readers:
+            logger.info("Reader {}".format(r)) ####
             devs = r.devices()
             for dev in devs:
                 available_devices.append(InputDevice(dev["name"],
                                                      dev["id"],
                                                      r))
+        
+                logger.info("Liste devices {}".format(dev["name"])) ####
     return available_devices
 
 
@@ -95,7 +100,7 @@ class InputDevice(InputReaderInterface):
         self.db = 0.
 
     def open(self):
-        # TODO: Reset data?
+        # TODO: Reset data? (self.id = dev_id)
         self._reader.open(self.id)
 
     def close(self):

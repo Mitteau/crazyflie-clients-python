@@ -44,6 +44,7 @@ import glob
 import traceback
 import logging
 import shutil
+import time ####
 
 from . import inputreaders as readers
 from . import inputinterfaces as interfaces
@@ -147,7 +148,7 @@ class JoystickReader(object):
 
         if do_device_discovery:
             self._discovery_timer = PeriodicTimer(1.0, self._do_device_discovery)
-            self._discovery_outtimer = PeriodicTimer(20., self._halt_device_discovery)
+            self._discovery_outtimer = PeriodicTimer(20., self._halt_device_discovery) #### augmenter durée
             self._discovery_timer.start()
             self._discovery_outtimer.start()
 
@@ -182,6 +183,8 @@ class JoystickReader(object):
         # Call with 3 bools (rp_limiting, yaw_limiting, thrust_limiting)
         self.limiting_updated = Caller()
 
+        self._rescan = False
+
     def _get_device_from_name(self, device_name):
         """Get the raw device from a name"""
         for d in readers.devices():
@@ -207,6 +210,7 @@ class JoystickReader(object):
         for d in devs:
             d.input = self
 
+        logger.info("Nombre périf {}".format(len(devs))) ####
         if len(devs):
             self.device_discovery.call(devs)
             self._discovery_timer.stop()
@@ -237,7 +241,10 @@ class JoystickReader(object):
         """List all available and approved input devices.
         This function will filter available devices by using the
         blacklist configuration and only return approved devices."""
+####        devs = readers.devices(self._rescan)
+        logger.info("Devs in joystickReader0") ####
         devs = readers.devices()
+        logger.info("Devs in joystickReader0 {}".format(devs)) ####
         devs += interfaces.devices()
         approved_devs = []
 
@@ -345,7 +352,7 @@ class JoystickReader(object):
             # Check if we supplied a new map, if not use the preferred one
             device = self._get_device_from_name(device_name)
             if device == None : return False
-            self._selected_mux.add_device(device, role)
+            self._selected_mux.add_device(device, role) ####
             # Update the UI with the limiting for this device
             self.limiting_updated.call(device.limit_rp,
                                        device.limit_yaw,
@@ -361,6 +368,20 @@ class JoystickReader(object):
             self.device_error.call(
                 "Could not find device {}".format(device_name))
         return False
+
+    def rescan_input(self) :
+        logger.info("Rescan.............") ####
+####        self._read_timer.stop() #### inutiles
+####        self._selected_mux.close()
+        self._rescan = True
+        """
+        self._do_device_discovery()
+####        time.sleep(100)
+        """
+        self._discovery_timer = PeriodicTimer(1.0, self._do_device_discovery)
+        self._discovery_outtimer = PeriodicTimer(20., self._halt_device_discovery)
+        self._discovery_timer.start()
+        self._discovery_outtimer.start()
 
     def resume_input(self):
         self._selected_mux.resume()

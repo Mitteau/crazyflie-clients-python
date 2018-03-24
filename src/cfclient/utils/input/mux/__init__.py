@@ -78,7 +78,7 @@ class InputMux(object):
         for d in self.role_devs:
             if self.role_devs[d]:
                 devs += (self.role_devs[d], )
-        logger.info("Devces {}, nom {}".format(d, d.name))
+        logger.info("Devces {}, nom {}".format(d, d.name)) ####
         return devs
 
     def resume(self):

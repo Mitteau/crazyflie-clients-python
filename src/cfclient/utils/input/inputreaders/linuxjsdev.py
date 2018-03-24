@@ -209,11 +209,13 @@ class Joystick():
         found).
         """
 
+        logger.info("nbr devices {}".format(len(self._devices))) ####
         if len(self._devices) == 0:
             syspaths = glob.glob("/sys/class/input/js*")
 
             for path in syspaths:
                 device_id = int(os.path.basename(path)[2:])
+                logger.info("dans joystick classe device id {}".format(device_id))
                 with open(path + "/device/name") as namefile:
                     name = namefile.read().strip()
                 self._js[device_id] = _JS(device_id, name)
