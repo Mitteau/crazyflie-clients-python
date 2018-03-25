@@ -51,7 +51,7 @@ System: {system}<br>
 Python: {pmajor}.{pminor}.{pmicro}<br>
 Qt: {qt_version}<br>
 PyQt: {pyqt_version}<br>
-Git branch: memo_mux<br>
+Git branch: rescand<br>
 <br>
 <b>Interface status</b><br>
 {interface_status}

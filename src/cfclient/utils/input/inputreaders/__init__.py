@@ -57,6 +57,7 @@ logger.info("Input readers: {}".format(input_readers))
 
 initialized_readers = []
 available_devices = []
+####rescan_done = False
 
 for reader in input_readers:
     try:
@@ -68,20 +69,30 @@ for reader in input_readers:
         logger.info("Could not initialize [{}]: {}".format(reader, e))
 
 
-#### def devices(rescan):
-def devices() :
+def devices(rescan):
+####def devices() :
     # Todo: Support rescanning and adding/removing devices
 ####    if len(available_devices)  > 0 : available_devices.clear()#### or rescan :
-    if len(available_devices)  == 0 : #### or rescan :
-        for r in initialized_readers:
-            logger.info("Reader {}".format(r)) ####
+####    rescan_done = False
+####    logger.info("Nbre de périfs dans .devices {} (1)".format(len(available_devices)))
+    if rescan : #### and not rescan_done :
+        for r in initialized_readers :
+            r.reinitialize()
+            available_devices.clear()
+####            rescan_done = True
+
+####    logger.info("Nbre de périfs dans .devices {} (2)".format(len(available_devices)))
+    if len(available_devices)  == 0 : ####or rescan : ####
+####        rescan_done = False
+        for r in initialized_readers :
+####            logger.info("Reader {}".format(r)) ####
             devs = r.devices()
             for dev in devs:
                 available_devices.append(InputDevice(dev["name"],
                                                      dev["id"],
                                                      r))
         
-                logger.info("Liste devices {}".format(dev["name"])) ####
+####                logger.info("Liste devices {}".format(dev["name"])) ####
     return available_devices
 
 
@@ -111,9 +122,9 @@ class InputDevice(InputReaderInterface):
 
     def read(self, include_raw=False):
 
-#        logger.info("Dans Input Device : {}".format(self._reader.read(self.id)))
+####        logger.info("Dans Input Device : {}".format(self._reader.read(self.id)))
         self._reader.read(self.id) #### Pourquoi deux lectures ?
-        if self._reader.read(self.id) != 0:
+        if self._reader.read(self.id) != 0 :
             [axis, buttons] = self._reader.read(self.id)
         else:
             return 0

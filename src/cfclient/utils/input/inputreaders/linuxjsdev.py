@@ -98,6 +98,7 @@ class _JS():
         self.buttons = []
         self.axes = []
         self._prev_pressed = {}
+        self._in_error = False
 
     def open(self):
         if self._f:
@@ -161,8 +162,9 @@ class _JS():
 
     def _read_all_events(self):
         """Consume all the events queued up in the JS device"""
+####        data []
         try:
-            while True:
+            while self._f :
                 data = self._f.read(struct.calcsize(JS_EVENT_FMT))
                 jsdata = struct.unpack(JS_EVENT_FMT, data)
                 self.__updatestate(jsdata)
@@ -171,6 +173,11 @@ class _JS():
                 logger.info(str(e))
                 self._f.close()
                 self._f = None
+                self._in_error = True
+####                self.axes.clear()
+####                self.buttons.clear()
+####                data.clear()
+####                data = 0
 #                raise IOError("Device has been disconnected")
         except TypeError:
             pass
@@ -184,7 +191,7 @@ class _JS():
 
     def read(self):
         """ Returns a list of all joystick event since the last call """
-        if not self._f:
+        if not self._f or self._in_error :
 #            raise Exception("Joystick device not opened")
             return 0
         self._read_all_events()
@@ -201,6 +208,10 @@ class Joystick():
         self.name = MODULE_NAME
         self._js = {}
         self._devices = []
+
+    def reinitialize(self) :
+        self._devices.clear()
+####        logger.info("Reinitialize")
 
     def devices(self):
         """
@@ -236,5 +247,5 @@ class Joystick():
     def read(self, device_id):
         """ Returns a list of all joystick event since the last call """
         rd = self._js[device_id].read()
-#        logger.info("Dans Joystick : {}".format(rd))
+        logger.info("Dans Joystick : {}".format(rd)) ####
         return rd

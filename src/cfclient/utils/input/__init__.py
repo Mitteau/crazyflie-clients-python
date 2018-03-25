@@ -187,7 +187,8 @@ class JoystickReader(object):
 
     def _get_device_from_name(self, device_name):
         """Get the raw device from a name"""
-        for d in readers.devices():
+        for d in readers.devices(self._rescan):
+####        for d in readers.devices():
             if d.name == device_name:
                 return d
         return None
@@ -204,13 +205,14 @@ class JoystickReader(object):
 
     def _do_device_discovery(self):
         devs = self.available_devices()
+        self._rescan = False
 
         # This is done so that devs can easily get access
         # to limits without creating lots of extra code
         for d in devs:
             d.input = self
 
-        logger.info("Nombre périf {}".format(len(devs))) ####
+####        logger.info("Nombre périf {}, device {}".format(len(devs), devs[0].name)) ####
         if len(devs):
             self.device_discovery.call(devs)
             self._discovery_timer.stop()
@@ -241,10 +243,10 @@ class JoystickReader(object):
         """List all available and approved input devices.
         This function will filter available devices by using the
         blacklist configuration and only return approved devices."""
-####        devs = readers.devices(self._rescan)
-        logger.info("Devs in joystickReader0") ####
-        devs = readers.devices()
-        logger.info("Devs in joystickReader0 {}".format(devs)) ####
+        devs = readers.devices(self._rescan)
+####        logger.info("Devs in joystickReader0") ####
+####        devs = readers.devices()
+####        logger.info("Devs in joystickReader1 {}".format(devs)) ####
         devs += interfaces.devices()
         approved_devs = []
 

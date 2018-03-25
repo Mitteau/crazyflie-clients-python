@@ -672,7 +672,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
     def input_deconnection(self):
         self._statusbar_label.setText("No input device connected!")
-        ret = QMessageBox.question(self, "Input device error", "Device probably disconnected.\nReconnect a device before rescanning.\nContinue (via Input device menu)?\nNo will exit client.")
+        ret = QMessageBox.question(self, "Input device error", "Device probably disconnected.\nReconnect a device before rescanning.\nContinue (via input device menu)?\nAnswer no will exit client.")
         if ret > 0xFFF0:self.closeAppRequest()
         else:
             self._menuitem_rescandevices.setEnabled(True)
@@ -743,7 +743,12 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
     def _inputdevice_selected(self, checked):
         """Called when a new input device has been selected from the menu. The
         data in the menu object is the associated map menu (directly under the
-        item in the menu) and the raw device"""
+        item in the menu) and the raw device
+        self.teacher_input = ""
+        self.student_input = ""
+        
+        
+        """
         (map_menu, device, mux_menu) = self.sender().data()
         if not checked:
             if map_menu:
@@ -764,9 +769,17 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                                 and dev_node is not self.sender():
                             dev_node.setChecked(False)
                         for mapping in map_menu.children() :
-                            if mapping.text() == self.mappings[device.name] :
+                            if self.mappings[device.name] and mapping.text() == self.mappings[device.name] :
                                 mapping.setChecked(True)
             if self.joystickReader.start_input(device.name, role_in_mux) :
+                logger.info("Mux {}, role in mux après choix {}, device {}".format(mux.name, role_in_mux, device.name)) ####
+                if mux.name == "Normal" : self.device_input = device.name
+                elif mux.name == "Teacher (RP)" or mux.name == "Teacher (RP)" :
+                    if role_in_mux == "Teacher" :
+                        self.teacher_input = device.name
+                    elif role_in_mux == "Student" :
+                        self.student_input = device.name
+                else : pass # no third case
                 if device.name in self.mappings.keys() :
                     self.joystickReader.set_input_map(device.name, self.mappings[device.name])
                 else :
@@ -793,6 +806,8 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         device = self.sender().data().data()[1]
         self.joystickReader.set_input_map(device.name, selected_mapping)
         self._update_input_device_footer()
+        self.mappings[device.name] = selected_mapping
+        Config().set("device_config_mapping", self.mappings)
 
     def input_menu_init(self) :
         if self.mux_name == "Teacher (RP)" or self.mux_name == "Teacher (RPYT)" :
@@ -836,11 +851,12 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             node.toggled.connect(self._mux_selected)
 
     def device_search_timeout(self, msg) :
-        QMessageBox.warning(self, "Input device error", "Search of devices reached timeout!\nClient exit.")
+        QMessageBox.critical(self, "Input device error", "Search of devices reached timeout!\nClient exit.")
         self.closeAppRequest()
 
     def device_discovery(self, devs):
         """Called when new devices have been added"""
+        logger.info("Signal dans main")
         self._menuitem_rescandevices.setEnabled(False)
         if self._initial_scan_device :
             self.input_menu_init()
@@ -848,6 +864,9 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             for m in self._all_role_menus:
                 m["muxmenu"].setEnabled(True)
         selected_node=None
+        found = False
+        
+####        logger.info("Devs ... dans device discovery {}".format(devs[0].name)) ####
 
         for d in devs:
             self._available_devices += (d,)
@@ -876,21 +895,37 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                                 self.joystickReader.set_input_map(self.teacher_input, "")
                                 dev_node.setChecked(True)
                             else :
-                                QMessageBox.warning(self, "Input device error", "%s: no such input device\nRedefine configuration." % self.teacher_input)
+                                QMessageBox.warning(self, "Input device error", "%s: no such input device\nPlease redefine configuration." % self.teacher_input)
                         if role_menu.title().lstrip() == "Student" :
                             if self.joystickReader.start_input(self.student_input, role="Student") :
                                 self.joystickReader.set_input_map(self.student_input, "")
                                 dev_node.setChecked(True)
                             else :
-                                QMessageBox.warning(self, "Input device error", "%s: no such input device\nRedefine configuration." % self.student_input)
+                                QMessageBox.warning(self, "Input device error", "%s: no such input device\nPlease redefine configuration." % self.student_input)
                     elif role_menu.title().lstrip() == "Device" and len(self.device_input) > 0:
+                        if self.device_input != d.name :
+####                            logger.info("Différent !!!!!!self.device_input {}, d.name {}".format(self.device_input, d.name))
+                            for d in devs :
+                                if d.name == self.device_input :
+####                                    logger.info("Change device !")
+                                    found = True
+                                    break 
+                            if not found :
+                                ret = QMessageBox.question(self, "Input device error", "%s is not the registered input device\nAccept to change?" % d.name)
+####                            logger.info("Ret {}".format(ret))
+                                if ret == 0xFFFF  :
+                                    self.device_input = d.name
+                                    Config().set("input_device", self.device_input)
+                                else : pass ####
+####                            logger.info("Device input {}".format(self.device_input)) ####
+####                            dev_group.menuAction().setText("Non") ####
                         if self.joystickReader.start_input(self.device_input, "Device") :
                             self.joystickReader.set_input_map(self.device_input, "")
                             dev_node.setChecked(True)
                         else :
-                            QMessageBox.warning(self, "Input device error", "%s: no such input device\nRedefine configuration." % self.device_input)
+                            QMessageBox.warning(self, "Input device error", "%s: no such input device\nPlease redefine configuration." % self.device_input)
                     elif self.input_config_clear :
-                        QMessageBox.warning(self, "Input device error", "No configuration defined\nRedefine one.")
+                        QMessageBox.warning(self, "Input device error", "No configuration defined\nPlease redefine one.")
 
                 dev_node.toggled.connect(self._inputdevice_selected)
 
