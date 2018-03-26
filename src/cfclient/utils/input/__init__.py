@@ -353,6 +353,7 @@ class JoystickReader(object):
             # device_id = self._available_devices[device_name]
             # Check if we supplied a new map, if not use the preferred one
             device = self._get_device_from_name(device_name)
+            logger.info(" dans start input device = {}".format(device))
             if device == None : return False
             self._selected_mux.add_device(device, role) ####
             # Update the UI with the limiting for this device

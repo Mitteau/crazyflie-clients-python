@@ -673,7 +673,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
     def input_deconnection(self):
         self._statusbar_label.setText("No input device connected!")
         ret = QMessageBox.question(self, "Input device error", "Device probably disconnected.\nReconnect a device before rescanning.\nContinue (via input device menu)?\nAnswer no will exit client.")
-        if ret > 0xFFF0:self.closeAppRequest()
+        if ret == 65536 : self.closeAppRequest()
         else:
             self._menuitem_rescandevices.setEnabled(True)
             for menu in self._all_role_menus:
@@ -722,23 +722,35 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
         msg = ""
 
-        if len(self.joystickReader.available_devices()) > 0:
+        if len(self.joystickReader.available_devices()) > 0 :
             mux = self.joystickReader._selected_mux
             msg = "Using {} mux with ".format(mux.name)
-            for key in list(mux.role_devs.keys())[:-1]:
+            if mux.role_devs.keys() :
+                for key in list(mux.role_devs.keys())[:-1]:
+                    if mux.role_devs[key]:
+                        msg += "{}, ".format(self._get_dev_status(mux.role_devs[key]))
+                    else:
+                        msg += "N/A, "
+                # Last item
+                key = list(mux.role_devs.keys())[-1]
                 if mux.role_devs[key]:
-                    msg += "{}, ".format(self._get_dev_status(mux.role_devs[key]))
+                    msg += "{}".format(self._get_dev_status(mux.role_devs[key]))
                 else:
-                    msg += "N/A, "
-            # Last item
-            key = list(mux.role_devs.keys())[-1]
-            if mux.role_devs[key]:
-                msg += "{}".format(self._get_dev_status(mux.role_devs[key]))
+                    msg += "N/A"
             else:
-                msg += "N/A"
-        else:
-            msg = "No input device found"
+                msg = "No input device found"
+                QMessageBox.critical(self, "Input device error", "Exit client")
+                self.closeAppRequest()
         self._statusbar_label.setText(msg)
+
+    def _no_device(self) :
+        mux = self.joystickReader._selected_mux
+        mux.role_devs.clear()
+####        if len(self.joystickReader.available_devices()) > 0:
+####            mux = self.joystickReader._selected_mux
+####            msg = "Using {} mux with ".format(mux.name)
+####            for key in list(mux.role_devs.keys())[:-1]:
+####                mux.role_devs[key] = None
 
     def _inputdevice_selected(self, checked):
         """Called when a new input device has been selected from the menu. The
@@ -904,26 +916,31 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                                 QMessageBox.warning(self, "Input device error", "%s: no such input device\nPlease redefine configuration." % self.student_input)
                     elif role_menu.title().lstrip() == "Device" and len(self.device_input) > 0:
                         if self.device_input != d.name :
-####                            logger.info("Différent !!!!!!self.device_input {}, d.name {}".format(self.device_input, d.name))
+                            logger.info("Différent !!!!!!self.device_input {}, d.name {}".format(self.device_input, d.name))
                             for d in devs :
+                                logger.info("Balayage devs {}".format(d.name))
                                 if d.name == self.device_input :
-####                                    logger.info("Change device !")
+                                    logger.info("Change device !")
                                     found = True
                                     break 
                             if not found :
                                 ret = QMessageBox.question(self, "Input device error", "%s is not the registered input device\nAccept to change?" % d.name)
-####                            logger.info("Ret {}".format(ret))
-                                if ret == 0xFFFF  :
+                                logger.info("Ret {}".format(ret))
+                                if ret == 16384  :
                                     self.device_input = d.name
                                     Config().set("input_device", self.device_input)
-                                else : pass ####
-####                            logger.info("Device input {}".format(self.device_input)) ####
+                                else :
+                                    self.device_input = ""
+                                    self._no_device()
+                            logger.info("Device input final {}".format(self.device_input)) ####
 ####                            dev_group.menuAction().setText("Non") ####
                         if self.joystickReader.start_input(self.device_input, "Device") :
                             self.joystickReader.set_input_map(self.device_input, "")
                             dev_node.setChecked(True)
-                        else :
+                        elif len(self.device_input) > 0 :
                             QMessageBox.warning(self, "Input device error", "%s: no such input device\nPlease redefine configuration." % self.device_input)
+                        else :
+                            QMessageBox.warning(self, "Input device error", "No input device\nPlease redefine configuration.")
                     elif self.input_config_clear :
                         QMessageBox.warning(self, "Input device error", "No configuration defined\nPlease redefine one.")
 

@@ -247,5 +247,5 @@ class Joystick():
     def read(self, device_id):
         """ Returns a list of all joystick event since the last call """
         rd = self._js[device_id].read()
-        logger.info("Dans Joystick : {}".format(rd)) ####
+####        logger.info("Dans Joystick : {}".format(rd)) ####
         return rd
