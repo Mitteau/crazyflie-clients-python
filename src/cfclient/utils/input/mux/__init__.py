@@ -66,9 +66,8 @@ class InputMux(object):
         return list(self._devs.keys())
 
     def add_device(self, dev, role):
-####        logger.info("Adding device {} to MUX {}".format(dev.name, self.name))
-        if dev == None : return ####
         logger.info("Adding device {} to MUX {}, as {}".format(dev.name, self.name, role)) ####
+        if dev == None : return #### Utile ?
         self._open_new_device(dev, role)
 
     def pause(self):

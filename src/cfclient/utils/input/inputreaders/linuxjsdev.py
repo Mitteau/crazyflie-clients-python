@@ -34,7 +34,6 @@ import logging
 import os
 import struct
 import sys
-import time ####
 
 if not sys.platform.startswith('linux'):
     raise Exception("Only supported on Linux")
@@ -221,7 +220,7 @@ class Joystick():
         """
         #### relevé des périfs
         self.syspaths = glob.glob("/sys/class/input/js*")
-        logger.info("OKKKKKKKKKKK")
+####        logger.info("OK")
         self._devices.clear()
 ####        del self._js
 ####        logger.info("On y passe")
@@ -292,7 +291,7 @@ devices") ####
 
 ####        self._devices.append({"id": device_id, "name": name})
         """
-        logger.info("Dict {}".format(self._devices))
+####        logger.info("Dict {}".format(self._devices))
         return self._devices #### ok jusque là
 
     def open(self, device_id):
@@ -309,7 +308,6 @@ devices") ####
     def read(self, device_id):
         """ Returns a list of all joystick event since the last call """
         logger.info("Adresse JS 2 ? {}".format(self._js[device_id]))
-        time.sleep(10)
 ####        logger.info("DEvice numbre {}".format(device_id)) ####
 ####        logger.info("JS ? {}".format(self._js))
 ####        if not self._js[device_id].opened : logger.info("Self._JS clos")

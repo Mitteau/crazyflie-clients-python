@@ -117,6 +117,7 @@ class JoystickReader(object):
 
         self._input_map = None
         self.devs = []
+        self.i = 0 ####
 
         if Config().get("flightmode") is "Normal":
             self.max_yaw_rate = Config().get("normal_max_yaw")
@@ -148,7 +149,7 @@ class JoystickReader(object):
         self._read_timer = PeriodicTimer(INPUT_READ_PERIOD, self.read_input)
 
         if do_device_discovery:
-            self._discovery_timer = PeriodicTimer(1.0, ####
+            self._discovery_timer = PeriodicTimer(1.0,
                                                   self._do_device_discovery)
             self._discovery_timer.start()
 
@@ -197,6 +198,7 @@ class JoystickReader(object):
         devs_old = []
         for d in self.devs :
             devs_old.append(d)
+        self.devs.clear()
         self.devs = self.available_devices()
 ####        if len(devs_old) >0 :
 ####            for d in devs_old : logger.info("Anciens {}".format(d.name))
@@ -219,7 +221,8 @@ class JoystickReader(object):
                     break
             if new : break
         if not new :
-            for d1 in devs_old :
+            for d1 in devs_old : ####si j'enlève js0, new n'est pas activé
+####                logger.info("in devs_old {}".format(d1.name))
                 new = True
                 for d in self.devs :
                     if d1.name == d.name :
@@ -229,15 +232,16 @@ class JoystickReader(object):
                         
 
         if new :
-            logger.info("NNNNNNNNNNNNNOUVEAU") ####
+            self.i += 1 ####
+            logger.info("NNNNNNNNNNNNNOUVEAU {}".format(self.i)) ####
             # This is done so that devs can easily get access
             # to limits without creating lots of extra code
             for d in self.devs:
                 d.input = self
 ####            logger.info("Device trouvé {}".format(d.name)) ####
 
-            if len(self.devs):#### pass
-                self.device_discovery.call(self.devs) #### C'est de là qu'on repart
+            if len(self.devs): pass
+####                self.device_discovery.call(self.devs) #### C'est de là qu'on repart
 ####            self._discovery_timer.stop()
 
     def available_mux(self):
@@ -270,6 +274,7 @@ class JoystickReader(object):
         devs += interfaces.devices()
         approved_devs = []
 
+####        for d in devs : logger.info("dans available_devices {}".format(d.name))
         for dev in devs:
 ####            logger.info("Received ...{}".format(dev.name))
             if ((not self._dev_blacklist) or

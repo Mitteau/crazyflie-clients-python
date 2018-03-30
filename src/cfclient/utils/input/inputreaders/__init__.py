@@ -80,7 +80,7 @@ def devices():
                     available_devices.append(InputDevice(dev["name"],
                                                      dev["id"],
                                                      r))
-####    logger.info("Dans init de input readers {}".format(available_devices)) ####
+####    for d in available_devices : logger.info("Dans init de input readers {}".format(d.name)) ####
     return available_devices
 
 
