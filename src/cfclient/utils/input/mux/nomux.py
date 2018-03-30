@@ -45,6 +45,7 @@ class NoMux(InputMux):
         self._devs = {"Device": None}
 
     def read(self):
+####        logger.info("self.input {}".format(self.input)) ####
         if self._devs["Device"]:
             data = self._devs["Device"].read()
 

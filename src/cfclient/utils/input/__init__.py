@@ -136,6 +136,7 @@ class JoystickReader(object):
             self.thrust_slew_limit = Config().get("slew_limit")
             self.thrust_slew_rate = Config().get("slew_rate")
 
+        logger.info("Max rp in input/init {}".format(self.max_rp_angle))
         self._dev_blacklist = None
         if len(Config().get("input_device_blacklist")) > 0:
             self._dev_blacklist = re.compile(
@@ -149,7 +150,7 @@ class JoystickReader(object):
         self._read_timer = PeriodicTimer(INPUT_READ_PERIOD, self.read_input)
 
         if do_device_discovery:
-            self._discovery_timer = PeriodicTimer(1.0,
+            self._discovery_timer = PeriodicTimer(3.0,
                                                   self._do_device_discovery)
             self._discovery_timer.start()
 
@@ -240,8 +241,8 @@ class JoystickReader(object):
                 d.input = self
 ####            logger.info("Device trouvé {}".format(d.name)) ####
 
-            if len(self.devs): pass
-####                self.device_discovery.call(self.devs) #### C'est de là qu'on repart
+            if len(self.devs):#### pass
+                self.device_discovery.call(self.devs) #### C'est de là qu'on repart
 ####            self._discovery_timer.stop()
 
     def available_mux(self):
@@ -274,7 +275,7 @@ class JoystickReader(object):
         devs += interfaces.devices()
         approved_devs = []
 
-####        for d in devs : logger.info("dans available_devices {}".format(d.name))
+####        for d in devs : logger.info("dans available_devices {}".format(d.name)) ####
         for dev in devs:
 ####            logger.info("Received ...{}".format(dev.name))
             if ((not self._dev_blacklist) or
@@ -345,6 +346,7 @@ class JoystickReader(object):
 
     def set_input_map(self, device_name, input_map_name):
         """Load and set an input device map with the given name"""
+####        logger.info("device {}, mapping {}, dans set inputmap".format(device_name, input_map_name)) ####
         dev = self._get_device_from_name(device_name)
 
         if len(input_map_name) == 0 or dev == None: return ####
@@ -406,9 +408,11 @@ class JoystickReader(object):
 
     def read_input(self):
         """Read input data from the selected device"""
-        return ####
+####        return ####
+####        logger.info("Read dans input/init")
         try:
             data = self._selected_mux.read()
+####            logger.info("Lecture data {}".format(data))
 
             if data:
                 if data.toggled.assistedControl:

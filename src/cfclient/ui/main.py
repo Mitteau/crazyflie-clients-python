@@ -678,6 +678,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
     def _get_dev_status(self, device):
         msg = "{}".format(device.name)
+####        logger.info("dans get dev status input {}".format(device.input_map)) ####
         if device.supports_mapping:
             map_name = "No input mapping"
             if device.input_map:
@@ -713,6 +714,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         """Called when a new input device has been selected from the menu. The
         data in the menu object is the associated map menu (directly under the
         item in the menu) and the raw device"""
+        logger.info("Dans inputdevice_selected...")
         (map_menu, device, mux_menu) = self.sender().data()
 ####        logger.info("self.sender() {}".format(self.sender()))
 ####        parent = self.sender().parent()#### Pourquoi là et pas dans master
@@ -756,20 +758,22 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         """Called when a new configuration has been selected from the menu. The
         data in the menu object is a referance to the device QAction in parent
         menu. This contains a referance to the raw device."""
+####        logger.info("Dans inputconfig_selected...")
         if not checked:
             return
 
         selected_mapping = str(self.sender().text())
         device = self.sender().data().data()[1]
+####        logger.info("device {}, mapping {}".format(device.name, selected_mapping)) ####
 ####        logger.info("Device device {}".format(device.name)) #### rameuté\
 #### pour chaque 'mux,sub_node'
-####        time.sleep(10)
+####        time.sleep(10) ####
         self.joystickReader.set_input_map(device.name, selected_mapping) ####
         self._update_input_device_footer()
 
     def device_discovery(self, devs):
         """Called when new devices have been added (or removed?)"""
-        logger.info(" dans device discovery in main") ####
+####        logger.info(" dans device discovery in main") ####
         for menu in self._all_role_menus:
             role_menu = menu["rolemenu"]
             mux_menu = menu["muxmenu"]

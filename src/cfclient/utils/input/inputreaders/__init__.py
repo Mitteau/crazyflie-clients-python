@@ -70,17 +70,17 @@ for reader in input_readers:
 
 def devices():
     # Todo: Support rescanning and adding/removing devices
-####    if len(available_devices) == 0:
-    available_devices.clear()
-    for r in initialized_readers:
-####            logger.info("Iitialized readers {}".format(r))
+    if len(available_devices) == 0:
+####    available_devices.clear()
+        for r in initialized_readers:
+            logger.info("Iitialized readers {}".format(r))
             devs = r.devices()
             for dev in devs:
                 if dev not in available_devices :
                     available_devices.append(InputDevice(dev["name"],
                                                      dev["id"],
                                                      r))
-####    for d in available_devices : logger.info("Dans init de input readers {}".format(d.name)) ####
+####    for d in available_devices : logger.info("Dans init de input readers {}".format(available_devices)) ####
     return available_devices
 
 
@@ -104,6 +104,7 @@ class InputDevice(InputReaderInterface):
         self._reader.open(self.id)
 
     def close(self):
+####        logger.info("CCCCCCCCCCCCClose") ####
         self._reader.close(self.id)
 
     def set_dead_band(self, db):

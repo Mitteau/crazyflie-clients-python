@@ -32,7 +32,6 @@ Interface for reading input devices and interfaces
 
 from time import time
 import logging
-
 logger = logging.getLogger(__name__)
 
 
@@ -149,12 +148,12 @@ class InputReaderInterface(object):
         return []
 
     def _cap_rp(self, rp):
+####        logger.info("self.input {}".format(self.input)) ####
         ret = rp * self.input.max_rp_angle
         if ret > self.input.max_rp_angle:
             ret = self.input.max_rp_angle
         elif ret < -1 * self.input.max_rp_angle:
             ret = -1 * self.input.max_rp_angle
-
         return ret
 
     def _scale_rp(self, roll, pitch):

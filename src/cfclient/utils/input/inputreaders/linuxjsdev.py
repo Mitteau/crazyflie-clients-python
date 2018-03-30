@@ -100,8 +100,8 @@ class _JS():
         self._prev_pressed = {}
 
     def open(self):
-        logger.info("Ouverture, on y passe 2, name {}, num = {}".format(self.\
-                                                      name, self.num)) ####
+####        logger.info("Ouverture, on y passe 2, name {}, num = {}".format(self.\
+####                                                      name, self.num)) ####
         if self._f:
             raise Exception("{} at {} is already "
                             "opened".format(self.name, self._f_name))
@@ -125,7 +125,8 @@ class _JS():
 
         self.buttons = list(0 for i in range(val.value))
         self.__initvalues()
-        if not self._f : logger.info("Pas ouvert") ####
+####        if not self._f : logger.info("Pas ouvert") ####
+####        else : logger.info("/dev/input/js{} ouvert".format(self.num))
 
     def close(self):
         """Close the joystick device"""
@@ -166,7 +167,7 @@ class _JS():
 
     def _read_all_events(self):
         """Consume all the events queued up in the JS device"""
-        logger.info("Aumoins 1")
+####        logger.info("Read : au moins 1 device") ####
         try:
             while True:
                 data = self._f.read(struct.calcsize(JS_EVENT_FMT))
@@ -190,8 +191,8 @@ class _JS():
 
     def read(self):
         """ Returns a list of all joystick event since the last call """
-        if not self._f : logger.info("Pas ouvert 2n self._f {}".\
-                          format(self._f)) ####
+####        if not self._f : logger.info("Pas ouvert 2n self._f {}".\
+####                          format(self._f)) ####
         if not self._f:
             raise Exception("Joystick device not opened")
 
@@ -210,7 +211,8 @@ class Joystick():
         self._js = {}
         self._devices = []
         self.syspaths = glob.glob("/sys/class/input/js*")
-        self.found = False
+        self.found = False ####
+        self.i = 0
 
     def devices(self):
         """
@@ -245,22 +247,36 @@ class Joystick():
 
 
 ####            if device_id not in self._devices.keys() :
+####            if len(self._js) > 0 :
+####                logger.info(" name {}".format(self._js)) #### On n'y passe pas ????????
+####            else : logger.info("Pas d'enregistrements")
             register = True
-            for d in self._devices :
-                if name == d["name"] :
+            for j in self._js :
+####                logger.info("j.name {}, name {}".format(self._js[j], name)) #### On n'y passe pas ????????
+                
+                if name == self._js[j].name :
                     register = False
                     break
+            self._devices.append({"id": device_id, "name": name})
 
             if register :
-                    self._devices.append({"id": device_id, "name": name})
                     self._js[device_id] = _JS(device_id, name) ####
-            
-            else :
-                logger.info("déjà enregistré")
+####            else :
+####                logger.info("déjà enregistré")
 
+####            logger.info("Nb devices {}, nom {}".format(len(self._devices), name)) ####
+####            for d in self._devices : 
+####                logger.info("d in self._devices {}".format(d))
             for i in self._js :
-                if i not in self._devices :
-                    self._js[i].close()
+####                logger.info("i in self._js {}".format(self._js[i].name))
+                absent = True
+                for d in self._devices :
+####                    logger.info("d in self._devices {}".format(d))
+                    if self._js[i].name == d["name"] :
+                        absent = False
+
+                if absent : self._js[i].close()
+
 ####                    self._devices.remove({"id" = i})
         """
             for d in self.devices :
@@ -291,23 +307,25 @@ devices") ####
 
 ####        self._devices.append({"id": device_id, "name": name})
         """
-####        logger.info("Dict {}".format(self._devices))
+####        logger.info("Dict {}, step {}".format(self._devices, self.i))
+        self.i += 1
         return self._devices #### ok jusque là
 
     def open(self, device_id):
         """
         Open the joystick device. The device_id is given by available_devices
         """
-####        logger.info("Ouverture, on y passe") ####
+####        logger.info("Ouverture, on y passe, adresse {}".format(self._js[device_id])) ####
         self._js[device_id].open()
 
     def close(self, device_id):
-        """Open the joystick device"""
+        """Close the joystick device"""
+####        logger.info("CCCCCCCCCCCCClose2222222222222") ####
         self._js[device_id].close()
 
     def read(self, device_id):
         """ Returns a list of all joystick event since the last call """
-        logger.info("Adresse JS 2 ? {}".format(self._js[device_id]))
+####        logger.info("Adresse JS 2 ? {}".format(self._js[device_id]))
 ####        logger.info("DEvice numbre {}".format(device_id)) ####
 ####        logger.info("JS ? {}".format(self._js))
 ####        if not self._js[device_id].opened : logger.info("Self._JS clos")
