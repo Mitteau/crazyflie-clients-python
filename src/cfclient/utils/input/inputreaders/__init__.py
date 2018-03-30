@@ -70,13 +70,17 @@ for reader in input_readers:
 
 def devices():
     # Todo: Support rescanning and adding/removing devices
-    if len(available_devices) == 0:
-        for r in initialized_readers:
+####    if len(available_devices) == 0:
+    available_devices.clear()
+    for r in initialized_readers:
+####            logger.info("Iitialized readers {}".format(r))
             devs = r.devices()
             for dev in devs:
-                available_devices.append(InputDevice(dev["name"],
+                if dev not in available_devices :
+                    available_devices.append(InputDevice(dev["name"],
                                                      dev["id"],
                                                      r))
+####    logger.info("Dans init de input readers {}".format(available_devices)) ####
     return available_devices
 
 
@@ -96,6 +100,7 @@ class InputDevice(InputReaderInterface):
 
     def open(self):
         # TODO: Reset data?
+####        logger.info("Dans open du lecteur device n° {}".format(self.id))
         self._reader.open(self.id)
 
     def close(self):

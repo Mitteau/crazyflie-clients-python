@@ -45,6 +45,7 @@ class InputMux(object):
 
     def _open_new_device(self, dev, role):
         # Silently close device if open as other role
+        logger.info("Dev {}, role {}".format(dev.name, role))
         for r in self._devs:
             if self._devs[r]:
                 if self._devs[r] == dev:
@@ -65,7 +66,9 @@ class InputMux(object):
         return list(self._devs.keys())
 
     def add_device(self, dev, role):
-        logger.info("Adding device {} to MUX {}".format(dev.name, self.name))
+####        logger.info("Adding device {} to MUX {}".format(dev.name, self.name))
+        if dev == None : return ####
+        logger.info("Adding device {} to MUX {}, as {}".format(dev.name, self.name, role)) ####
         self._open_new_device(dev, role)
 
     def pause(self):

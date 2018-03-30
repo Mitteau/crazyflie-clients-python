@@ -34,6 +34,7 @@ import logging
 import os
 import struct
 import sys
+import time ####
 
 if not sys.platform.startswith('linux'):
     raise Exception("Only supported on Linux")
@@ -94,18 +95,21 @@ class _JS():
         self._f_name = "/dev/input/js{}".format(num)
         self._f = None
 
-        self.opened = False
+        self.opened = False #### ????
         self.buttons = []
         self.axes = []
         self._prev_pressed = {}
 
     def open(self):
+        logger.info("Ouverture, on y passe 2, name {}, num = {}".format(self.\
+                                                      name, self.num)) ####
         if self._f:
             raise Exception("{} at {} is already "
                             "opened".format(self.name, self._f_name))
 
         self._f = open("/dev/input/js{}".format(self.num), "rb")
         fcntl.fcntl(self._f.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
+        self.opened = True
 
         # Get number of axis and button
         val = ctypes.c_int()
@@ -122,13 +126,15 @@ class _JS():
 
         self.buttons = list(0 for i in range(val.value))
         self.__initvalues()
+        if not self._f : logger.info("Pas ouvert") ####
 
     def close(self):
-        """Open the joystick device"""
+        """Close the joystick device"""
         if not self._f:
             return
 
         logger.info("Closed {} ({})".format(self.name, self.num))
+        self.opened = False
 
         self._f.close()
         self._f = None
@@ -161,6 +167,7 @@ class _JS():
 
     def _read_all_events(self):
         """Consume all the events queued up in the JS device"""
+        logger.info("Aumoins 1")
         try:
             while True:
                 data = self._f.read(struct.calcsize(JS_EVENT_FMT))
@@ -171,7 +178,7 @@ class _JS():
                 logger.info(str(e))
                 self._f.close()
                 self._f = None
-                raise IOError("Device has been disconnected")
+####                raise IOError("Device has been disconnected")
         except TypeError:
             pass
         except ValueError:
@@ -184,6 +191,8 @@ class _JS():
 
     def read(self):
         """ Returns a list of all joystick event since the last call """
+        if not self._f : logger.info("Pas ouvert 2n self._f {}".\
+                          format(self._f)) ####
         if not self._f:
             raise Exception("Joystick device not opened")
 
@@ -201,6 +210,8 @@ class Joystick():
         self.name = MODULE_NAME
         self._js = {}
         self._devices = []
+        self.syspaths = glob.glob("/sys/class/input/js*")
+        self.found = False
 
     def devices(self):
         """
@@ -208,23 +219,87 @@ class Joystick():
         the detected devices (result is cached once one or more device are
         found).
         """
-
-        if len(self._devices) == 0:
-            syspaths = glob.glob("/sys/class/input/js*")
-
-            for path in syspaths:
-                device_id = int(os.path.basename(path)[2:])
+        #### relevé des périfs
+        self.syspaths = glob.glob("/sys/class/input/js*")
+        logger.info("OKKKKKKKKKKK")
+        self._devices.clear()
+####        del self._js
+####        logger.info("On y passe")
+        for path in self.syspaths:
+####            logger.info("Chemin {}".format(path))
+            device_id = int(os.path.basename(path)[2:])
+            name = ""
+####            logger.info("Device_id ")
+####            if not self._js[device_id] in self._js.keys() :
+            try :
                 with open(path + "/device/name") as namefile:
-                    name = namefile.read().strip()
-                self._js[device_id] = _JS(device_id, name)
-                self._devices.append({"id": device_id, "name": name})
+                        name = namefile.read().strip()
+           
+####    logger.info(" Device identité-{}-nom-{}".format(device_id, name))
+            except IOError as e:
+                if e.errno != 11:
+                    logger.info(str(e))
+####     raise IOError("Device has been disconnected in .devices") ####
+####            logger.info("Device_id {}, name {}".format(device_id, name)) ####
 
-        return self._devices
+        #### ajouté si absent et instantiation
+
+
+####            if device_id not in self._devices.keys() :
+            register = True
+            for d in self._devices :
+                if name == d["name"] :
+                    register = False
+                    break
+
+            if register :
+                    self._devices.append({"id": device_id, "name": name})
+                    self._js[device_id] = _JS(device_id, name) ####
+            
+            else :
+                logger.info("déjà enregistré")
+
+            for i in self._js :
+                if i not in self._devices :
+                    self._js[i].close()
+####                    self._devices.remove({"id" = i})
+        """
+            for d in self.devices :
+                for i in self._js :
+                    self._js[device_id].close()
+                    
+                if ############## suppression des devices décrochés
+
+            not self.found :
+                try :
+                    with open(path + "/device/name") as namefile:
+                        name = namefile.read().strip()
+                    self._js[device_id] = _JS(device_id, name) ####
+                    self.found = True
+            
+####                logger.info(" Device identité-{}-nom-{}".format(device_i\
+                              name))
+                except IOError as e:
+                    if e.errno != 11:
+                        logger.info(str(e))
+                        raise IOError("Device has been disconnected in .\
+devices") ####
+
+####            if self not in self._devices :
+            self._devices.append({"id": device_id, "name": name})
+            if self._js[device_id] : logger.info("Adresse JS 1 {}, name {}".\
+                       format(self._js[device_id], self._js[device_id].name))
+
+####        self._devices.append({"id": device_id, "name": name})
+        """
+        logger.info("Dict {}".format(self._devices))
+        return self._devices #### ok jusque là
 
     def open(self, device_id):
         """
         Open the joystick device. The device_id is given by available_devices
         """
+####        logger.info("Ouverture, on y passe") ####
         self._js[device_id].open()
 
     def close(self, device_id):
@@ -233,4 +308,9 @@ class Joystick():
 
     def read(self, device_id):
         """ Returns a list of all joystick event since the last call """
+        logger.info("Adresse JS 2 ? {}".format(self._js[device_id]))
+        time.sleep(10)
+####        logger.info("DEvice numbre {}".format(device_id)) ####
+####        logger.info("JS ? {}".format(self._js))
+####        if not self._js[device_id].opened : logger.info("Self._JS clos")
         return self._js[device_id].read()

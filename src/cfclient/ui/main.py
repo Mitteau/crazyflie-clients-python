@@ -28,6 +28,7 @@ The main file for the Crazyflie control application.
 """
 import logging
 import sys
+import time ####
 
 import cfclient
 import cfclient.ui.tabs
@@ -660,6 +661,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             for s in sub_nodes:
                 s.setEnabled(False)
         else:
+####            logger.info("On passe dans Mux selection") ####
             (mux, sub_nodes) = self.sender().data()
             for s in sub_nodes:
                 s.setEnabled(True)
@@ -712,6 +714,9 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         data in the menu object is the associated map menu (directly under the
         item in the menu) and the raw device"""
         (map_menu, device, mux_menu) = self.sender().data()
+####        logger.info("self.sender() {}".format(self.sender()))
+####        parent = self.sender().parent()#### Pourquoi là et pas dans master
+####        logger.info("Parent {}".format(parent.title()))
         if not checked:
             if map_menu:
                 map_menu.setEnabled(False)
@@ -723,6 +728,8 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                 map_menu.setEnabled(True)
 
             (mux, sub_nodes) = mux_menu.data()
+####            logger.info("(mux & subnodes {}".format((mux, sub_nodes)))
+####            logger.info("self.sender() 0 {}".format(self.sender()))
             for role_node in sub_nodes:
                 for dev_node in role_node.children():
                     if type(dev_node) is QAction and dev_node.isChecked():
@@ -730,16 +737,20 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
                                 and dev_node is not self.sender():
                             dev_node.setChecked(False)
 
+####            logger.info("self.sender() 1 {}".format(self.sender()))
             role_in_mux = str(self.sender().parent().title()).strip()
+####            role_in_mux = str(parent.title().strip()) #### Pourquoi là et pas dans master
+####            self.closeAppRequest()
             logger.info("Role of {} is {}".format(device.name,
                                                   role_in_mux))
 
             Config().set("input_device", str(device.name))
 
+####            time.sleep(10) ####
             self._mapping_support = self.joystickReader.start_input(
                 device.name,
                 role_in_mux)
-        self._update_input_device_footer()
+        self._update_input_device_footer()#### OK jusque là
 
     def _inputconfig_selected(self, checked):
         """Called when a new configuration has been selected from the menu. The
@@ -750,16 +761,21 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
         selected_mapping = str(self.sender().text())
         device = self.sender().data().data()[1]
-        self.joystickReader.set_input_map(device.name, selected_mapping)
+####        logger.info("Device device {}".format(device.name)) #### rameuté\
+#### pour chaque 'mux,sub_node'
+####        time.sleep(10)
+        self.joystickReader.set_input_map(device.name, selected_mapping) ####
         self._update_input_device_footer()
 
     def device_discovery(self, devs):
-        """Called when new devices have been added"""
+        """Called when new devices have been added (or removed?)"""
+        logger.info(" dans device discovery in main") ####
         for menu in self._all_role_menus:
             role_menu = menu["rolemenu"]
             mux_menu = menu["muxmenu"]
             dev_group = QActionGroup(role_menu, exclusive=True)
             for d in devs:
+####                logger.info("Discovered in main {}".format(d.name))
                 dev_node = QAction(d.name, role_menu, checkable=True,
                                    enabled=True)
                 role_menu.addAction(dev_node)
@@ -806,10 +822,11 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             if len(mux.supported_roles()) <= len(self._available_devices):
                 mux_node.setEnabled(True)
 
-        # TODO: Currently only supports selecting default mux
+        # TODO: Currently only supports selecting default mux ####
         if self._all_mux_nodes[0].isEnabled():
             self._all_mux_nodes[0].setChecked(True)
 
+####        logger.info("All mux nodes [0] {}".format(self._all_mux_nodes[0].text()))
         # If the previous length of the available devies was 0, then select
         # the default on. If that's not available then select the first
         # on in the list.

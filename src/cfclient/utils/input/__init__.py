@@ -44,6 +44,7 @@ import glob
 import traceback
 import logging
 import shutil
+import time ####
 
 from . import inputreaders as readers
 from . import inputinterfaces as interfaces
@@ -115,6 +116,7 @@ class JoystickReader(object):
         self._rp_dead_band = 0.1
 
         self._input_map = None
+        self.devs = []
 
         if Config().get("flightmode") is "Normal":
             self.max_yaw_rate = Config().get("normal_max_yaw")
@@ -146,7 +148,7 @@ class JoystickReader(object):
         self._read_timer = PeriodicTimer(INPUT_READ_PERIOD, self.read_input)
 
         if do_device_discovery:
-            self._discovery_timer = PeriodicTimer(1.0,
+            self._discovery_timer = PeriodicTimer(1.0, ####
                                                   self._do_device_discovery)
             self._discovery_timer.start()
 
@@ -192,16 +194,51 @@ class JoystickReader(object):
         self.has_pressure_sensor = available
 
     def _do_device_discovery(self):
-        devs = self.available_devices()
+        devs_old = []
+        for d in self.devs :
+            devs_old.append(d)
+        self.devs = self.available_devices()
+####        if len(devs_old) >0 :
+####            for d in devs_old : logger.info("Anciens {}".format(d.name))
+####        else : pass
+####            logger.info("Pas d'anciens")
+####        for d in self.devs : logger.info("Découverts {}".format(d.name))
+####        time.sleep(1) ####
+####        logger.info("Old devices {}".format(devs_old))
+####        logger.info("New devices {}".format(self.devs))
+####        if self.devs != devs_old :
 
-        # This is done so that devs can easily get access
-        # to limits without creating lots of extra code
-        for d in devs:
-            d.input = self
+        new = False
+        for d in self.devs :
+####            logger.info("in self.devs {}".format(d.name))
+            new = True
+            for d1 in devs_old :
+####                logger.info("in devs_old {}".format(d1.name))
+                if d.name == d1.name :
+                    new = False
+                    break
+            if new : break
+        if not new :
+            for d1 in devs_old :
+                new = True
+                for d in self.devs :
+                    if d1.name == d.name :
+                        new = False
+                        break
+                if new : break
+                        
 
-        if len(devs):
-            self.device_discovery.call(devs)
-            self._discovery_timer.stop()
+        if new :
+            logger.info("NNNNNNNNNNNNNOUVEAU") ####
+            # This is done so that devs can easily get access
+            # to limits without creating lots of extra code
+            for d in self.devs:
+                d.input = self
+####            logger.info("Device trouvé {}".format(d.name)) ####
+
+            if len(self.devs):#### pass
+                self.device_discovery.call(self.devs) #### C'est de là qu'on repart
+####            self._discovery_timer.stop()
 
     def available_mux(self):
         return self._mux
@@ -234,13 +271,17 @@ class JoystickReader(object):
         approved_devs = []
 
         for dev in devs:
+####            logger.info("Received ...{}".format(dev.name))
             if ((not self._dev_blacklist) or
                     (self._dev_blacklist and
                      not self._dev_blacklist.match(dev.name))):
                 dev.input = self
+####                if dev not in approved_devs :
                 approved_devs.append(dev)
+####                logger.info("Approved ... {}".format(dev.name))
 
-        return approved_devs
+####        logger.info(" approved... {}".format(approved_devs))
+        return approved_devs #### OK jusque là
 
     def enableRawReading(self, device_name):
         """
@@ -300,8 +341,9 @@ class JoystickReader(object):
     def set_input_map(self, device_name, input_map_name):
         """Load and set an input device map with the given name"""
         dev = self._get_device_from_name(device_name)
-        settings = ConfigManager().get_settings(input_map_name)
 
+        if len(input_map_name) == 0 or dev == None: return ####
+        settings = ConfigManager().get_settings(input_map_name)
         if settings:
             self.springy_throttle = settings["springythrottle"]
             self._rp_dead_band = settings["rp_dead_band"]
@@ -320,6 +362,7 @@ class JoystickReader(object):
             # device_id = self._available_devices[device_name]
             # Check if we supplied a new map, if not use the preferred one
             device = self._get_device_from_name(device_name)
+            if device == None : return ####
             self._selected_mux.add_device(device, role)
             # Update the UI with the limiting for this device
             self.limiting_updated.call(device.limit_rp,
@@ -329,7 +372,7 @@ class JoystickReader(object):
             return device.supports_mapping
         except Exception:
             self.device_error.call(
-                "Error while opening/initializing  input device\n\n%s" %
+                "Error while opening/initializing input device\n\n%s" %
                 (traceback.format_exc()))
 
         if not self._input_device:
@@ -358,6 +401,7 @@ class JoystickReader(object):
 
     def read_input(self):
         """Read input data from the selected device"""
+        return ####
         try:
             data = self._selected_mux.read()
 
