@@ -397,6 +397,8 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             node.setData((m, mux_subnodes))
 
         self._mapping_support = True
+        self._device = None
+        self._role = ""
 
     def disable_input(self, disable):
         """
@@ -650,7 +652,31 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
     def _display_input_device_error(self, error):
         self.cf.close_link()
-        QMessageBox.critical(self, "Input device error", error)
+        if error == "Error while running input device": self.\
+                                          input_deconnection()
+        else: QMessageBox.critical(self, "Input device error", error)
+
+    def input_deconnection(self):
+        self._statusbar_label.setText("No input device connected!")
+        ret = QMessageBox.question(self, "Input device error", "Device probably\
+ disconnected.\nReconnect now .\nAnswer no will exit client.")
+        a = False
+        if ret == 65536 : self.closeAppRequest()
+        else:
+            """
+            self._menuitem_rescandevices.setEnabled(True)
+            for menu in self._all_role_menus:
+####                menu["muxmenu"].setChecked(False)
+                menu["muxmenu"].setEnabled(False)
+                menu["rolemenu"].setEnabled(False)
+            pass #### on repart d'ici
+            """
+            time.sleep(10)
+            a = self.joystickReader.start_input(
+                self._device.name,
+                self._role)
+            logger.info("Input démarré ? {}".format(a))
+            #### suite en erreur
 
     def _mux_selected(self, checked):
         """Called when a new mux is selected. The menu item contains a
@@ -752,6 +778,8 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             self._mapping_support = self.joystickReader.start_input(
                 device.name,
                 role_in_mux)
+            self._device = device
+            self._role = role_in_mux
         self._update_input_device_footer()#### OK jusque là
 
     def _inputconfig_selected(self, checked):

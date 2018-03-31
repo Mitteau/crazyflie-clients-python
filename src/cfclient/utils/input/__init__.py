@@ -234,15 +234,16 @@ class JoystickReader(object):
 
         if new :
             self.i += 1 ####
-            logger.info("NNNNNNNNNNNNNOUVEAU {}".format(self.i)) ####
+            logger.info("NNNNNNNNNNNNNOUVEAU, pas {}".format(self.i)) ####
             # This is done so that devs can easily get access
             # to limits without creating lots of extra code
             for d in self.devs:
                 d.input = self
-####            logger.info("Device trouvé {}".format(d.name)) ####
+                logger.info("Device trouvé {}".format(d.name)) ####
 
-            if len(self.devs):#### pass
-                self.device_discovery.call(self.devs) #### C'est de là qu'on repart
+            if len(self.devs) > 0 : pass
+####                self.device_discovery.call(self.devs) #### C'est de là qu'on repart
+####                logger.info("1 ou 2")
 ####            self._discovery_timer.stop()
 
     def available_mux(self):
@@ -277,14 +278,14 @@ class JoystickReader(object):
 
 ####        for d in devs : logger.info("dans available_devices {}".format(d.name)) ####
         for dev in devs:
-####            logger.info("Received ...{}".format(dev.name))
+####            logger.info("Received ...{}".format(dev.name)) ####
             if ((not self._dev_blacklist) or
                     (self._dev_blacklist and
                      not self._dev_blacklist.match(dev.name))):
                 dev.input = self
 ####                if dev not in approved_devs :
                 approved_devs.append(dev)
-####                logger.info("Approved ... {}".format(dev.name))
+####                logger.info("Approved ... {}".format(dev.name)) ####
 
 ####        logger.info(" approved... {}".format(approved_devs))
         return approved_devs #### OK jusque là
@@ -365,11 +366,12 @@ class JoystickReader(object):
         Start reading input from the device with name device_name using config
         config_name. Returns True if device supports mapping, otherwise False
         """
+####        logger.info("Dans start input")####
         try:
             # device_id = self._available_devices[device_name]
             # Check if we supplied a new map, if not use the preferred one
             device = self._get_device_from_name(device_name)
-            if device == None : return ####
+            if device == None : return False####
             self._selected_mux.add_device(device, role)
             # Update the UI with the limiting for this device
             self.limiting_updated.call(device.limit_rp,
@@ -408,11 +410,16 @@ class JoystickReader(object):
 
     def read_input(self):
         """Read input data from the selected device"""
-####        return ####
+        return ####
 ####        logger.info("Read dans input/init")
         try:
             data = self._selected_mux.read()
 ####            logger.info("Lecture data {}".format(data))
+            if data == 0:
+                self.input_updated.call(0, 0, 0, 0)
+                self.pause_input()
+                self.device_error.call("Error while running input device")
+                return
 
             if data:
                 if data.toggled.assistedControl:

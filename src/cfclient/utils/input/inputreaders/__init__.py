@@ -63,24 +63,49 @@ for reader in input_readers:
         module = __import__(reader, globals(), locals(), [reader], 1)
         main_name = getattr(module, "MODULE_MAIN")
         initialized_readers.append(getattr(module, main_name)())
-        logger.info("Successfully initialized [{}]".format(reader))
+        logger.info("Successfully initialized [{}]".format(reader)) ####
+####        available_devices.clear()
     except Exception as e:
         logger.info("Could not initialize [{}]: {}".format(reader, e))
 
 
 def devices():
     # Todo: Support rescanning and adding/removing devices
-    if len(available_devices) == 0:
+####    if len(available_devices) == 0:
 ####    available_devices.clear()
-        for r in initialized_readers:
-            logger.info("Iitialized readers {}".format(r))
-            devs = r.devices()
-            for dev in devs:
-                if dev not in available_devices :
-                    available_devices.append(InputDevice(dev["name"],
+####    logger.info("Initialized readers")
+    i = 0
+    for r in initialized_readers:
+    
+####        logger.info("Iitialized readers {}".format(r))
+        devs = r.devices()
+####        if len(devs) == 0 : return []
+        for dev in devs :    
+            keep = True
+####            logger.info("A device >{}<".format(dev["name"]))
+            for d in available_devices :
+####                logger.info("an available device >{}<".format(d.name))
+                if dev["name"] == d.name :
+                    keep = False
+            if keep :
+####                logger.info("Keep.......")
+                available_devices.append(InputDevice(dev["name"],
                                                      dev["id"],
                                                      r))
+        for d in available_devices :
+            lost = True
+            for dev in devs :
+                if dev["name"] == d.name :
+                    lost = False
+            if lost :
+####                logger.info("Lost.......")
+                available_devices.remove(d)
+                
+            """
+            """
 ####    for d in available_devices : logger.info("Dans init de input readers {}".format(available_devices)) ####
+####    for d in available_devices : logger.info("Dans init de input readers {}, pas {}".format(d, i)) ####
+    i+=1
     return available_devices
 
 
@@ -98,6 +123,9 @@ class InputDevice(InputReaderInterface):
         self.limit_yaw = True
         self.db = 0.
 
+    def name(self) :
+        return dev_name
+
     def open(self):
         # TODO: Reset data?
 ####        logger.info("Dans open du lecteur device n° {}".format(self.id))
@@ -111,6 +139,13 @@ class InputDevice(InputReaderInterface):
         self.db = db
 
     def read(self, include_raw=False):
+
+        self._reader.read(self.id) #### Pourquoi deux lectures ?
+        if self._reader.read(self.id) != 0 :
+            [axis, buttons] = self._reader.read(self.id)
+        else:
+            return 0
+
         [axis, buttons] = self._reader.read(self.id)
 
         # To support split axis we need to zero all the axis

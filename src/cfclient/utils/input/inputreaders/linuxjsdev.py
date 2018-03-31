@@ -98,6 +98,7 @@ class _JS():
         self.buttons = []
         self.axes = []
         self._prev_pressed = {}
+        self._in_error = False
 
     def open(self):
 ####        logger.info("Ouverture, on y passe 2, name {}, num = {}".format(self.\
@@ -178,6 +179,7 @@ class _JS():
                 logger.info(str(e))
                 self._f.close()
                 self._f = None
+                self._in_error = True
 ####                raise IOError("Device has been disconnected")
         except TypeError:
             pass
@@ -193,12 +195,15 @@ class _JS():
         """ Returns a list of all joystick event since the last call """
 ####        if not self._f : logger.info("Pas ouvert 2n self._f {}".\
 ####                          format(self._f)) ####
-        if not self._f:
-            raise Exception("Joystick device not opened")
-
+        if not self._f or self._in_error :
+#            raise Exception("Joystick device not opened")
+            return 0
         self._read_all_events()
 
         return [self.axes, self.buttons]
+
+
+
 
 
 class Joystick():
@@ -226,6 +231,7 @@ class Joystick():
         self._devices.clear()
 ####        del self._js
 ####        logger.info("On y passe")
+        
         for path in self.syspaths:
 ####            logger.info("Chemin {}".format(path))
             device_id = int(os.path.basename(path)[2:])
@@ -234,13 +240,13 @@ class Joystick():
 ####            if not self._js[device_id] in self._js.keys() :
             try :
                 with open(path + "/device/name") as namefile:
-                        name = namefile.read().strip()
+                    name = namefile.read().strip()
            
-####    logger.info(" Device identité-{}-nom-{}".format(device_id, name))
+####            logger.info(" Device identité-{}-nom-{}".format(device_id, name))
             except IOError as e:
                 if e.errno != 11:
                     logger.info(str(e))
-####     raise IOError("Device has been disconnected in .devices") ####
+                    raise IOError("Device has been disconnected in .devices") ####
 ####            logger.info("Device_id {}, name {}".format(device_id, name)) ####
 
         #### ajouté si absent et instantiation
