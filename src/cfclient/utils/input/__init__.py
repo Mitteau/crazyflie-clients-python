@@ -235,6 +235,7 @@ class JoystickReader(object):
         if new :
             self.i += 1 ####
             logger.info("NNNNNNNNNNNNNOUVEAU, pas {}".format(self.i)) ####
+            if len(self.devs) == 0 : self._selected_mux.close()
             # This is done so that devs can easily get access
             # to limits without creating lots of extra code
             for d in self.devs:
@@ -344,9 +345,9 @@ class JoystickReader(object):
         if self._input_device:
             self._input_device.input_map = input_map
 
-    def set_input_map(self, device_name, input_map_name):
+    def set_input_map(self, device_name, input_map_name = ""):
         """Load and set an input device map with the given name"""
-####        logger.info("device {}, mapping {}, dans set inputmap".format(device_name, input_map_name)) ####
+        logger.info("device {}, mapping {}, dans set inputmap".format(device_name, input_map_name)) ####
         dev = self._get_device_from_name(device_name)
 
         if len(input_map_name) == 0 or dev == None: return ####
@@ -365,7 +366,7 @@ class JoystickReader(object):
         Start reading input from the device with name device_name using config
         config_name. Returns True if device supports mapping, otherwise False
         """
-####        logger.info("Dans start input")####
+        logger.info("Dans start input")####
         try:
             # device_id = self._available_devices[device_name]
             # Check if we supplied a new map, if not use the preferred one
@@ -377,7 +378,7 @@ class JoystickReader(object):
                                        device.limit_yaw,
                                        device.limit_thrust)
             self._read_timer.start()
-####            logger.info("Lecture démarrée")
+            logger.info("Lecture démarrée")
             return device.supports_mapping
         except Exception:
             self.device_error.call(

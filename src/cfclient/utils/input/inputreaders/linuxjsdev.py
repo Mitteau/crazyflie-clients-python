@@ -101,12 +101,13 @@ class _JS():
         self._in_error = False
 
     def open(self):
-####        logger.info("Ouverture PÉRIF, name {}, num = {}".format(self.\
-####                                                      name, self.num)) ####
+        logger.info("Ouverture PÉRIF, name {}, num = {}".format(self.\
+                                                      name, self.num)) ####
         if self._f:
             raise Exception("{} at {} is already "
                             "opened".format(self.name, self._f_name))
 
+        self._in_error = False ####
         self._f = open("/dev/input/js{}".format(self.num), "rb")
         fcntl.fcntl(self._f.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
         self.opened = True
@@ -134,7 +135,7 @@ class _JS():
         if not self._f:
             return
 
-        logger.info("Closed {} ({})".format(self.name, self.num))
+        logger.info("Closed {} (js{})".format(self.name, self.num)) ####
         self.opened = False
 
         self._f.close()
@@ -195,8 +196,9 @@ class _JS():
         """ Returns a list of all joystick event since the last call """
 ####        if not self._f : logger.info("Pas ouvert 2n self._f {}".\
 ####                          format(self._f)) ####
+####        logger.info("self _f in error {}".format(self._in_error))
         if not self._f or self._in_error :
-#            raise Exception("Joystick device not opened")
+####            raise Exception("Joystick device not opened")
             return 0
         self._read_all_events()
 

@@ -61,6 +61,8 @@ class InputMux(object):
         # Open the new device before attaching it to a role
         dev.open()
         self._devs[role] = dev
+        logger.info("Réouverture")
+
 
     def supported_roles(self):
         return list(self._devs.keys())
@@ -87,8 +89,10 @@ class InputMux(object):
 
     def close(self):
         """Close down the MUX and close all it's devices"""
+        logger.info("Close mux")
         for d in [key for key in list(self._devs.keys()) if self._devs[key]]:
             self._devs[d].close()
+            logger.info("Cloture de {}, nom {}".format(self._devs[d], self._devs[d].name))
             self._devs[d] = None
 
     def read(self):
