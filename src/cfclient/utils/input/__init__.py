@@ -150,7 +150,7 @@ class JoystickReader(object):
         self._read_timer = PeriodicTimer(INPUT_READ_PERIOD, self.read_input)
 
         if do_device_discovery:
-            self._discovery_timer = PeriodicTimer(3.0,
+            self._discovery_timer = PeriodicTimer(1.0, ####
                                                   self._do_device_discovery)
             self._discovery_timer.start()
 
@@ -241,8 +241,7 @@ class JoystickReader(object):
                 d.input = self
                 logger.info("Device trouvé {}".format(d.name)) ####
 
-            if len(self.devs) > 0 : pass
-####                self.device_discovery.call(self.devs) #### C'est de là qu'on repart
+            self.device_discovery.call(self.devs) #### C'est de là qu'on repart
 ####                logger.info("1 ou 2")
 ####            self._discovery_timer.stop()
 
@@ -260,7 +259,7 @@ class JoystickReader(object):
 
         old_mux.close()
 
-        logger.info("Selected MUX: {}".format(self._selected_mux.name))
+####        logger.info("Selected MUX: {}".format(self._selected_mux.name))
 
     def set_assisted_control(self, mode):
         self._assisted_control = mode
@@ -378,6 +377,7 @@ class JoystickReader(object):
                                        device.limit_yaw,
                                        device.limit_thrust)
             self._read_timer.start()
+####            logger.info("Lecture démarrée")
             return device.supports_mapping
         except Exception:
             self.device_error.call(
@@ -410,11 +410,11 @@ class JoystickReader(object):
 
     def read_input(self):
         """Read input data from the selected device"""
-        return ####
+####        return ####
 ####        logger.info("Read dans input/init")
         try:
             data = self._selected_mux.read()
-####            logger.info("Lecture data {}".format(data))
+####            logger.info("Lecture data {}".format(data)) ####
             if data == 0:
                 self.input_updated.call(0, 0, 0, 0)
                 self.pause_input()

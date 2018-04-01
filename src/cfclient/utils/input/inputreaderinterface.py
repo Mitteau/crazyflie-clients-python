@@ -148,7 +148,7 @@ class InputReaderInterface(object):
         return []
 
     def _cap_rp(self, rp):
-####        logger.info("self.input {}".format(self.input)) ####
+####        logger.info("DANS CAP-RP, self.input {}".format(self.input)) ####
         ret = rp * self.input.max_rp_angle
         if ret > self.input.max_rp_angle:
             ret = self.input.max_rp_angle
