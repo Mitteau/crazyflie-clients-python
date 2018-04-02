@@ -189,6 +189,7 @@ class JoystickReader(object):
         for d in readers.devices():
             if d.name == device_name:
                 return d
+        self.device_error.call("New device driver")
         return None
 
     def set_alt_hold_available(self, available):

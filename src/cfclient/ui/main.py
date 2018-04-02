@@ -276,7 +276,6 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 
         self._current_input_config = None
         self._active_config = None
-        self._active_config = None
 
         self.inputConfig = None
         
@@ -684,14 +683,38 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         # if (len(devs) > 0):
         #    self.device_discovery(devs)
 
+
     def _display_input_device_error(self, error):
         
         if error == "Error while running input device": self.\
                                           input_deconnection()
+        elif error == "New device driver" : 
+            logger.info("Changement dans les périf")
+####            QMessageBox.warning(self, "Input device error", "It is not possible to change input device.")
+            # Change selected device
+####            self._device = None
+            pass
+            
+####            self.reconnection()
         else :
-            QMessageBox.critical(self, "Input device error", error)
+            QMessageBox.warning(self, "Input device error", error)
             self.cf.close_link() #### Pertinent ?
 
+    def reconnection(self) :
+        self._stop_input = False #### utile ????
+        time.sleep(2)
+        if self._device == None: return
+        if self.start :
+            a = self.joystickReader.start_input(
+                self._device.name,
+                self._role)
+            logger.info("Input re démarré ? {}".format(a))
+            if a : self.joystickReader.set_input_map(self._device.name,self.selected_mapping)
+            self._update_input_device_footer()
+####            logger.info("Input map installé")
+        else :
+            pass
+        
     def input_deconnection(self):
         self._statusbar_label.setText("No input device connected!")
         self._stop_input = True #### Utile ?
@@ -701,6 +724,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 ####        self.joystickReader.pause_input()
         if ret == 65536 : self.closeAppRequest()
         else:
+            self.reconnection()
 ####            mux = self.joystickReader._selected_mux
 ####            mux.close()
 ####            self.joystickReader.resume_input()
@@ -714,17 +738,6 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             pass #### on repart d'ici
             """
 ####            time.sleep(10)
-            self._stop_input = False
-            if self.start :
-                a = self.joystickReader.start_input(
-                    self._device.name,
-                    self._role)
-                logger.info("Input re démarré ? {}".format(a))
-                if a : self.joystickReader.set_input_map(self._device.name,self.selected_mapping)
-                self._update_input_device_footer()
-####            logger.info("Input map installé")
-            else :
-                pass
 
     def _mux_selected(self, checked):
         """Called when a new mux is selected. The menu item contains a
@@ -796,12 +809,14 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
 ####        logger.info("self.sender() {}".format(self.sender()))
 ####        parent = self.sender().parent()#### Pourquoi là et pas dans master
 ####        logger.info("Parent {}".format(parent.title()))
-        a = self.joystickReader.start_input(
-            self._device.name,
-            self._role)
-        logger.info("Input re démarré ? {}".format(a))
-        if a : self.joystickReader.set_input_map(self._device.name,self.selected_mapping)
-        self._update_input_device_footer() #### ????
+        if self._device != None :
+            a = self.joystickReader.start_input(
+                self._device,
+                self._role)
+            logger.info("Input re démarré ? {}".format(a))
+            if a : self.joystickReader.set_input_map(self._device.name,self.selected_mapping)
+            self._update_input_device_footer() #### ????
+        else : pass
         """
         for m in self._all_role_menus :
             (mux, sub_nodes) = m.data()
@@ -906,7 +921,17 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         """Called when new devices have been added (or removed?)"""
         logger.info(" dans device discoverystop input {}, nb devices {}".format(self._stop_input, len(devs))) ####
         if len(devs) == 0 : return ####or self._stop_input : return
-        logger.info(" dans device discovery in main") ####
+
+
+####        if len(devs) > 1 :
+####            QMessageBox.warning(self, "Input device error", "Another device than {} is not actually possible.\nPlease remove it.".format(self._device))
+
+
+
+
+
+####        self.joystickReader.pause_input()
+####        logger.info(" dans device discovery in main") ####
         self.start = True
 
         if self._first_run :
@@ -990,7 +1015,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
         # on in the list.
         # TODO: This will only work for the "Normal" mux so this will be
         #       selected by default
-        logger.info("IIIIIIIIci")
+####        logger.info("IIIIIIIIci")
         logger.info("config input {}".format(Config().get("input_device")))
 
 
