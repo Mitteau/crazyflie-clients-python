@@ -858,6 +858,7 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
     def select_input_device(self, devs) :
         node = None
         dev_node = None
+        device_input_map = ""
         found = False
         for role in self._all_role_menus : #### ici pour ajouter muxes
             if role["muxmenu"].text() == "Normal" and\
@@ -867,10 +868,30 @@ class MainUI(QtWidgets.QMainWindow, main_window_class):
             logger.info("Dans node choisi {}".format(a.text()))
             if a.text() == self.device_input :
                  a.setChecked(True) #### vérifier device_selected....
+                 dev_node = a
                  found = True
+            break
         if found == False :
             QMessageBox.warning(self, "Input device error", "Cannot \
 find registered device\nPlease select one.")
+        else :#### sélectionner une map
+####            for d in self.mappings :
+####                if d.key() == self.device_input :
+####                    device_input_map = d.data()
+####            device_input_map = self.mappings[self.device_input]
+           for k in self.mappings.keys() :
+               logger.info("Key {}, say {}".format(k, self.mappings[k]))
+               if k == self.device_input :
+                   device_input_map = self.mappings[k]
+                   break
+                   device_input_map = ""
+           logger.info("Found map {}".format(device_input_map))
+           for mp in dev_node.data()[0].actions() :
+                logger.info("maps {}".format(mp.text()))
+                if mp.text() == device_input_map :
+                    mp.setChecked(True)
+#### NON            for mp in dev_node.data()[0] :
+#### NON                logger.info("maps {}".format(mp.text()))
 ####        return
 ########################################
 
@@ -1030,11 +1051,10 @@ find registered device\nPlease select one.")
             msg = "No input device found"
         self._statusbar_label.setText(msg)
 
-    """
     def _inputdevice_activated(self): #### utile ????????
-        """"""Called when a new input device has been selected from the menu. The
+        """Called when a new input device has been selected from the menu. The
         data in the menu object is the associated map menu (directly under the
-        item in the menu) and the raw device""""""
+        item in the menu) and the raw device"""
         logger.info("Dans inputdevice_activated...")
 ####        if self.sender() :
 ####        (map_menu, device, mux_menu) = self.sender().data()
@@ -1078,7 +1098,6 @@ find registered device\nPlease select one.")
             self._device = device
             self._role = role_in_mux
         self._update_input_device_footer()#### OK jusque là
-        """
 
 
 
@@ -1139,6 +1158,7 @@ find registered device\nPlease select one.")
         if not checked:
             return
 
+        devs = []
         selected_mapping = str(self.sender().text())
         self.selected_mapping = selected_mapping
         device = self.sender().data().data()[1]
