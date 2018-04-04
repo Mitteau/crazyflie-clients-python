@@ -236,19 +236,23 @@ class JoystickReader(object):
         if new :
             self.i += 1 ####
             logger.info("NNNNNNNNNNNNNOUVEAU, pas {}".format(self.i)) ####
-            if len(self.devs) == 0 : self._selected_mux.close()
+####            if len(self.devs) == 0 : self._selected_mux.close()
+            # Eveything must go through this call
+            self.device_discovery.call(self.devs) #### C'est de là qu'on repart
             # This is done so that devs can easily get access
             # to limits without creating lots of extra code
             for d in self.devs:
                 d.input = self
                 logger.info("Device trouvé {}".format(d.name)) ####
 
-            self.device_discovery.call(self.devs) #### C'est de là qu'on repart
 ####                logger.info("1 ou 2")
 ####            self._discovery_timer.stop()
 
     def available_mux(self):
         return self._mux
+
+    def get_mux(self) :
+        return self._selected_mux
 
     def set_mux(self, name=None, mux=None):
         old_mux = self._selected_mux
@@ -258,8 +262,13 @@ class JoystickReader(object):
                     self._selected_mux = m
         elif mux:
             self._selected_mux = mux
+        else :
+            self._selected_mux = None
 
-        old_mux.close()
+        if self._selected_mux != None :
+            logger.info("Mux sélectionné {}".format(self._selected_mux.name))
+        else : logger.info("Pas de mux sélectionné ")
+####        if old_mux != None : old_mux.close() #### à regarder de près
 
 ####        logger.info("Selected MUX: {}".format(self._selected_mux.name))
 
