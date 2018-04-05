@@ -98,14 +98,17 @@ class _JS():
         self.buttons = []
         self.axes = []
         self._prev_pressed = {}
+        self._in_error = False
 
     def open(self):
         if self._f:
             raise Exception("{} at {} is already "
                             "opened".format(self.name, self._f_name))
 
+        self._in_error = False #### utile ????
         self._f = open("/dev/input/js{}".format(self.num), "rb")
         fcntl.fcntl(self._f.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
+        self.opened = True
 
         # Get number of axis and button
         val = ctypes.c_int()
@@ -124,14 +127,15 @@ class _JS():
         self.__initvalues()
 
     def close(self):
-        """Open the joystick device"""
+        """Close the joystick device"""
         if not self._f:
             return
 
-        logger.info("Closed {} ({})".format(self.name, self.num))
+        logger.info("Closed {} (js{})".format(self.name, self.num))
 
         self._f.close()
         self._f = None
+        self.opened = False
 
     def __initvalues(self):
         """Read the buttons and axes initial values from the js device"""
@@ -171,7 +175,7 @@ class _JS():
                 logger.info(str(e))
                 self._f.close()
                 self._f = None
-                raise IOError("Device has been disconnected")
+                self._in_error = True
         except TypeError:
             pass
         except ValueError:
@@ -184,7 +188,7 @@ class _JS():
 
     def read(self):
         """ Returns a list of all joystick event since the last call """
-        if not self._f:
+        if not self._f or self._in_error :
             raise Exception("Joystick device not opened")
 
         self._read_all_events()
@@ -201,6 +205,8 @@ class Joystick():
         self.name = MODULE_NAME
         self._js = {}
         self._devices = []
+        self.syspaths = glob.glob("/sys/class/input/js*") #### raccourcir
+        self._found = False
 
     def devices(self):
         """
@@ -209,16 +215,33 @@ class Joystick():
         found).
         """
 
-        if len(self._devices) == 0:
-            syspaths = glob.glob("/sys/class/input/js*")
-
-            for path in syspaths:
-                device_id = int(os.path.basename(path)[2:])
+        self.syspaths = glob.glob("/sys/class/input/js*")
+        self._devices.clear()
+        for path in self.syspaths:
+            device_id = int(os.path.basename(path)[2:])
+            try :
                 with open(path + "/device/name") as namefile:
                     name = namefile.read().strip()
+            except IOError as e :
+                if e.errno != 11 :
+                    raise IOError("Device reading error")
+            register = True
+            for j in self._js :
+                if name == self._js[j].name :
+                    register = False
+                    break
+            self._devices.append({"id": device_id, "name": name})
+            if register :
                 self._js[device_id] = _JS(device_id, name)
-                self._devices.append({"id": device_id, "name": name})
+            for i in self._js :
+                absent = True
+                for d in self._devices :
+                    if self._js[i].name == d["name"] :
+                        absent = False
+                if absent :
+                    self._js[i].close()
 
+        logger.debug("Dict {}".format(self._devices))
         return self._devices
 
     def open(self, device_id):
@@ -228,7 +251,7 @@ class Joystick():
         self._js[device_id].open()
 
     def close(self, device_id):
-        """Open the joystick device"""
+        """Close the joystick device"""
         self._js[device_id].close()
 
     def read(self, device_id):

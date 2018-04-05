@@ -70,13 +70,21 @@ for reader in input_readers:
 
 def devices():
     # Todo: Support rescanning and adding/removing devices
-    if len(available_devices) == 0:
-        for r in initialized_readers:
-            devs = r.devices()
-            for dev in devs:
+    for r in initialized_readers :
+        devs = r.devices()
+        for dev in devs :
+            keep = True
+            for d in available_devices :
+                if dev["name"] == d.name : keep = False
+            if keep :
                 available_devices.append(InputDevice(dev["name"],
                                                      dev["id"],
                                                      r))
+        for d in available_devices :
+            lost = True
+            for dev in devs :
+                if dev["name"] == d.name : lost = False
+            if lost : available_devices.remove(d)
     return available_devices
 
 
@@ -94,6 +102,9 @@ class InputDevice(InputReaderInterface):
         self.limit_yaw = True
         self.db = 0.
 
+    def name(self):
+        return dev_name
+
     def open(self):
         # TODO: Reset data?
         self._reader.open(self.id)
@@ -105,6 +116,9 @@ class InputDevice(InputReaderInterface):
         self.db = db
 
     def read(self, include_raw=False):
+        self._reader.read(self.id) # why 2 readings ?
+        if self._reader.read(self.id) == 0 : return 0
+
         [axis, buttons] = self._reader.read(self.id)
 
         # To support split axis we need to zero all the axis

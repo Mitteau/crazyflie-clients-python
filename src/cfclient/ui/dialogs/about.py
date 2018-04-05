@@ -51,6 +51,7 @@ System: {system}<br>
 Python: {pmajor}.{pminor}.{pmicro}<br>
 Qt: {qt_version}<br>
 PyQt: {pyqt_version}<br>
+branch: thread_2<br>
 <br>
 <b>Interface status</b><br>
 {interface_status}

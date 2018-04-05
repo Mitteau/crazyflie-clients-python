@@ -115,6 +115,7 @@ class JoystickReader(object):
         self._rp_dead_band = 0.1
 
         self._input_map = None
+        self.devs = []
 
         if Config().get("flightmode") is "Normal":
             self.max_yaw_rate = Config().get("normal_max_yaw")
@@ -185,6 +186,7 @@ class JoystickReader(object):
         for d in readers.devices():
             if d.name == device_name:
                 return d
+        self.device_error.call("New device driver")
         return None
 
     def set_alt_hold_available(self, available):
@@ -192,19 +194,41 @@ class JoystickReader(object):
         self.has_pressure_sensor = available
 
     def _do_device_discovery(self):
-        devs = self.available_devices()
-
-        # This is done so that devs can easily get access
-        # to limits without creating lots of extra code
-        for d in devs:
-            d.input = self
-
-        if len(devs):
-            self.device_discovery.call(devs)
-            self._discovery_timer.stop()
+        devs_old = []
+        for d in self.devs :
+            devs_old.append(d)
+        self.devs.clear()
+        self.devs = self.available_devices()
+        # Has the dictionary change?
+        change = False
+        for d in self.devs :
+            change = True
+            for d1 in devs_old :
+                if d.name == d1.name :
+                    change = False
+                    break
+            if change : break
+        if not change :
+            for d1 in devs_old :
+                change = True
+                for d in self.devs :
+                    if d1.name == d.name :
+                        change = False
+                        break
+                if change : break
+        if change :
+            logger.info("NNNNNNNNNNNNNNNNNNNNNNouveau dictionary") ####
+####            self.device_discovery.call(self.devs)
+            for d in self.devs :
+                d.input = self
+                logger.info("Périf {}".format(d.name))
+            if len(self.devs) == 0 : logger.info("Pas de périf")
 
     def available_mux(self):
         return self._mux
+
+    def get_mux(self) :
+        return self._selected_mux
 
     def set_mux(self, name=None, mux=None):
         old_mux = self._selected_mux
@@ -214,10 +238,7 @@ class JoystickReader(object):
                     self._selected_mux = m
         elif mux:
             self._selected_mux = mux
-
-        old_mux.close()
-
-        logger.info("Selected MUX: {}".format(self._selected_mux.name))
+        else : self._selected_mux = None
 
     def set_assisted_control(self, mode):
         self._assisted_control = mode
@@ -297,10 +318,11 @@ class JoystickReader(object):
         if self._input_device:
             self._input_device.input_map = input_map
 
-    def set_input_map(self, device_name, input_map_name):
+    def set_input_map(self, device_name, input_map_name = ""):
         """Load and set an input device map with the given name"""
         dev = self._get_device_from_name(device_name)
-        settings = ConfigManager().get_settings(input_map_name)
+        if len(input_map_name) == 0 or dev == None : return
+        settings = ConfigManager().getsettings(input_map_name)
 
         if settings:
             self.springy_throttle = settings["springythrottle"]
@@ -320,6 +342,7 @@ class JoystickReader(object):
             # device_id = self._available_devices[device_name]
             # Check if we supplied a new map, if not use the preferred one
             device = self._get_device_from_name(device_name)
+            if device == None : return False
             self._selected_mux.add_device(device, role)
             # Update the UI with the limiting for this device
             self.limiting_updated.call(device.limit_rp,
@@ -329,7 +352,7 @@ class JoystickReader(object):
             return device.supports_mapping
         except Exception:
             self.device_error.call(
-                "Error while opening/initializing  input device\n\n%s" %
+                "Error while opening/initializing input device\n\n%s" %
                 (traceback.format_exc()))
 
         if not self._input_device:
@@ -360,7 +383,11 @@ class JoystickReader(object):
         """Read input data from the selected device"""
         try:
             data = self._selected_mux.read()
-
+            if data == 0 :
+                self.input_updated.call(0, 0, 0, 0)
+                self.pause_input()
+                self.device_error.call("Error while running input device")
+                return
             if data:
                 if data.toggled.assistedControl:
                     if self._assisted_control == \
