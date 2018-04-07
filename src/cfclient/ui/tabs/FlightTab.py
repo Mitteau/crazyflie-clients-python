@@ -406,6 +406,7 @@ class FlightTab(Tab, flight_tab_class):
         self.helper.inputDeviceReader.min_thrust = self.minThrust.value()
         self.helper.inputDeviceReader.max_thrust = self.maxThrust.value()
         if (self.isInCrazyFlightmode is True):
+            
             Config().set("min_thrust", self.minThrust.value())
             Config().set("max_thrust", self.maxThrust.value())
 

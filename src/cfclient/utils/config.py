@@ -89,6 +89,7 @@ class Config(metaclass=Singleton):
     def save_file(self):
         """ Save the user config to file """
         json_data = open(self._config, 'w')
+####        logger.info("Enregistrement json, _data {}".format(self._data))
         json_data.write(json.dumps(self._data, indent=2))
         json_data.close()
         logger.info("Config file saved to [%s]" % self._config)

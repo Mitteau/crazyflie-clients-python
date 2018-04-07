@@ -45,7 +45,7 @@ class InputMux(object):
 
     def _open_new_device(self, dev, role):
         # Silently close device if open as other role
-        logger.info("Dev {}, role {}".format(dev.name, role)) ####
+####        logger.info("Dev {}, role {}".format(dev.name, role)) ####
         for r in self._devs:
             if self._devs[r]:
                 if self._devs[r] == dev:
@@ -61,7 +61,7 @@ class InputMux(object):
         # Open the new device before attaching it to a role
         dev.open()
         self._devs[role] = dev
-        logger.info("Réouverture")
+####        logger.info("Réouverture")
 
 
     def supported_roles(self):

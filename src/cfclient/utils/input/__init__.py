@@ -136,7 +136,7 @@ class JoystickReader(object):
             self.thrust_slew_limit = Config().get("slew_limit")
             self.thrust_slew_rate = Config().get("slew_rate")
 
-        logger.info("Max rp in input/init {}".format(self.max_rp_angle))
+####        logger.info("Max rp in input/init {}".format(self.max_rp_angle))
         self._dev_blacklist = None
         if len(Config().get("input_device_blacklist")) > 0:
             self._dev_blacklist = re.compile(
@@ -243,7 +243,7 @@ class JoystickReader(object):
             # to limits without creating lots of extra code
             for d in self.devs:
                 d.input = self
-                logger.info("Device trouvé {}".format(d.name)) ####
+####                logger.info("Device trouvé {}".format(d.name)) ####
 
 ####                logger.info("1 ou 2")
 ####            self._discovery_timer.stop()
@@ -265,9 +265,11 @@ class JoystickReader(object):
         else :
             self._selected_mux = None
 
+        """
         if self._selected_mux != None :
             logger.info("Mux sélectionné {}".format(self._selected_mux.name))
         else : logger.info("Pas de mux sélectionné ")
+        """
 ####        if old_mux != None : old_mux.close() #### à regarder de près
 
 ####        logger.info("Selected MUX: {}".format(self._selected_mux.name))
@@ -357,7 +359,7 @@ class JoystickReader(object):
 
     def set_input_map(self, device_name, input_map_name = ""):
         """Load and set an input device map with the given name"""
-        logger.info("device {}, mapping {}, dans set inputmap".format(device_name, input_map_name)) ####
+####        logger.info("device {}, mapping {}, dans set inputmap".format(device_name, input_map_name)) ####
         dev = self._get_device_from_name(device_name)
 
         if len(input_map_name) == 0 or dev == None: return ####
@@ -376,7 +378,7 @@ class JoystickReader(object):
         Start reading input from the device with name device_name using config
         config_name. Returns True if device supports mapping, otherwise False
         """
-        logger.info("Dans start input")####
+####        logger.info("Dans start input")####
         try:
             # device_id = self._available_devices[device_name]
             # Check if we supplied a new map, if not use the preferred one
@@ -388,7 +390,7 @@ class JoystickReader(object):
                                        device.limit_yaw,
                                        device.limit_thrust)
             self._read_timer.start()
-            logger.info("Lecture démarrée")
+####            logger.info("Lecture démarrée")
             return device.supports_mapping
         except Exception:
             self.device_error.call(
@@ -423,6 +425,7 @@ class JoystickReader(object):
         """Read input data from the selected device"""
 ####        return ####
 ####        logger.info("Read dans input/init")
+        return #### MAP
         try:
             data = self._selected_mux.read()
 ####            logger.info("Lecture data {}".format(data)) ####

@@ -101,8 +101,8 @@ class _JS():
         self._in_error = False
 
     def open(self):
-        logger.info("Ouverture PÉRIF, name {}, num = {}".format(self.\
-                                                      name, self.num)) ####
+####        logger.info("Ouverture PÉRIF, name {}, num = {}".format(self.\
+####                                                      name, self.num)) ####
         if self._f:
             raise Exception("{} at {} is already "
                             "opened".format(self.name, self._f_name))
