@@ -101,8 +101,8 @@ class _JS():
         self._in_error = False
 
     def open(self):
-####        logger.info("Ouverture PÉRIF, name {}, num = {}".format(self.\
-####                                                      name, self.num)) ####
+        logger.info("Ouverture PÉRIF, name {}, num = {}".format(self.\
+                                                      name, self.num)) ####
         if self._f:
             raise Exception("{} at {} is already "
                             "opened".format(self.name, self._f_name))
@@ -128,7 +128,7 @@ class _JS():
         self.buttons = list(0 for i in range(val.value))
         self.__initvalues()
 ####        if not self._f : logger.info("Pas ouvert") ####
-####        else : logger.info("/dev/input/js{} ouvert".format(self.num))
+####        else : logger.info("Device {} :/dev/input/js{} ouvert".format(self.name, self.num))
 
     def close(self):
         """Close the joystick device"""
@@ -231,6 +231,7 @@ class Joystick():
         self.syspaths = glob.glob("/sys/class/input/js*")
 ####        logger.info("OK")
         self._devices.clear()
+####        logger.info("OK2")
 ####        del self._js
 ####        logger.info("On y passe")
         
@@ -259,6 +260,7 @@ class Joystick():
 ####                logger.info(" name {}".format(self._js)) #### On n'y passe pas ????????
 ####            else : logger.info("Pas d'enregistrements")
             register = True
+####            logger.info("OK3")
             for j in self._js :
 ####                logger.info("j.name {}, name {}".format(self._js[j], name)) #### On n'y passe pas ????????
                 
@@ -275,48 +277,20 @@ class Joystick():
 ####            logger.info("Nb devices {}, nom {}".format(len(self._devices), name)) ####
 ####            for d in self._devices : 
 ####                logger.info("d in self._devices {}".format(d))
-            for i in self._js :
-####                logger.info("i in self._js {}".format(self._js[i].name))
+            for d in self._devices :
+####                logger.info("i={} in self._js {}".format(i, self._js[i].name))
                 absent = True
-                for d in self._devices :
-####                    logger.info("d in self._devices {}".format(d))
+                for i in self._js :
+####                    logger.info("i={}  d in self._devices {}".format(i, d))
                     if self._js[i].name == d["name"] :
                         absent = False
 
-                if absent : self._js[i].close()
+                if absent :
+                    self._js[i].close() #### le coupable ?????
+                    logger.info("absent")
 
 ####                    self._devices.remove({"id" = i})
-        """
-            for d in self.devices :
-                for i in self._js :
-                    self._js[device_id].close()
-                    
-                if ############## suppression des devices décrochés
-
-            not self.found :
-                try :
-                    with open(path + "/device/name") as namefile:
-                        name = namefile.read().strip()
-                    self._js[device_id] = _JS(device_id, name) ####
-                    self.found = True
-            
-####                logger.info(" Device identité-{}-nom-{}".format(device_i\
-                              name))
-                except IOError as e:
-                    if e.errno != 11:
-                        logger.info(str(e))
-                        raise IOError("Device has been disconnected in .\
-devices") ####
-
-####            if self not in self._devices :
-            self._devices.append({"id": device_id, "name": name})
-            if self._js[device_id] : logger.info("Adresse JS 1 {}, name {}".\
-                       format(self._js[device_id], self._js[device_id].name))
-
-####        self._devices.append({"id": device_id, "name": name})
-        """
-####        logger.info("Dict {}, step {}".format(self._devices, self.i))
-        self.i += 1
+####        logger.info("Dict {}, name {}, js{}".format(self._devices, self.name, self.i))
         return self._devices #### ok jusque là
 
     def open(self, device_id):
@@ -328,7 +302,7 @@ devices") ####
 
     def close(self, device_id):
         """Close the joystick device"""
-####        logger.info("CCCCCCCCCCCCClose2222222222222") ####
+####        logger.info("CCCCCCCCCCCCClose2222222222222 js{}".format(device_id)) ####
         self._js[device_id].close()
 
     def read(self, device_id):

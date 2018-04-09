@@ -75,11 +75,13 @@ def devices():
 ####    available_devices.clear()
 ####    logger.info("Initialized readers")
     i = 0
+####    logger.info("ici")
     for r in initialized_readers:
     
 ####        logger.info("Iitialized readers {}".format(r))
         devs = r.devices()
 ####        if len(devs) == 0 : return []
+####        logger.info("iciici")
         for dev in devs :    
             keep = True
 ####            logger.info("A device >{}<".format(dev["name"]))
@@ -92,20 +94,20 @@ def devices():
                 available_devices.append(InputDevice(dev["name"],
                                                      dev["id"],
                                                      r))
+####        logger.info("par ici")
         for d in available_devices :
             lost = True
             for dev in devs :
                 if dev["name"] == d.name :
                     lost = False
             if lost :
-####                logger.info("Lost.......")
+                logger.info("Lost.......")
                 available_devices.remove(d)
                 
-            """
-            """
 ####    for d in available_devices : logger.info("Dans init de input readers {}".format(available_devices)) ####
 ####    for d in available_devices : logger.info("Dans init de input readers {}, pas {}".format(d, i)) ####
     i+=1
+####    logger.info("là")
     return available_devices
 
 

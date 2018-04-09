@@ -118,6 +118,7 @@ class JoystickReader(object):
         self._input_map = None
         self.devs = []
         self.i = 0 ####
+        self.j = 0 ####
 
         if Config().get("flightmode") is "Normal":
             self.max_yaw_rate = Config().get("normal_max_yaw")
@@ -187,7 +188,9 @@ class JoystickReader(object):
     def _get_device_from_name(self, device_name):
         """Get the raw device from a name"""
         for d in readers.devices():
+####            logger.info("device name demandé {}, lu {}".format(device_name, d.name))
             if d.name == device_name:
+####                logger.info("device name {}, id {}".format(d.name, d.id))
                 return d
         self.device_error.call("New device driver")
         return None
@@ -243,10 +246,7 @@ class JoystickReader(object):
             # to limits without creating lots of extra code
             for d in self.devs:
                 d.input = self
-####                logger.info("Device trouvé {}".format(d.name)) ####
-
-####                logger.info("1 ou 2")
-####            self._discovery_timer.stop()
+                logger.info("Device trouvé {}, js{}".format(d.name, d.id)) ####
 
     def available_mux(self):
         return self._mux
@@ -360,7 +360,9 @@ class JoystickReader(object):
     def set_input_map(self, device_name, input_map_name = ""):
         """Load and set an input device map with the given name"""
 ####        logger.info("device {}, mapping {}, dans set inputmap".format(device_name, input_map_name)) ####
+####        logger.info("icicicicici")
         dev = self._get_device_from_name(device_name)
+####        logger.info("lalalalala")
 
         if len(input_map_name) == 0 or dev == None: return ####
         settings = ConfigManager().get_settings(input_map_name)
@@ -368,10 +370,13 @@ class JoystickReader(object):
             self.springy_throttle = settings["springythrottle"]
             self._rp_dead_band = settings["rp_dead_band"]
             self._input_map = ConfigManager().get_config(input_map_name)
-        dev.input_map = self._input_map
-        dev.input_map_name = input_map_name
-        Config().get("device_config_mapping")[device_name] = input_map_name
-        dev.set_dead_band(self._rp_dead_band)
+####            logger.info("Input map {}".format(self._input_map))
+            dev.input_map = self._input_map
+            dev.input_map_name = input_map_name
+            dev.set_dead_band(self._rp_dead_band)
+        else :
+            logger.info("Cannot read input map")
+####        logger.info("Fait")
 
     def start_input(self, device_name, role="Device", config_name=None):
         """
@@ -421,21 +426,30 @@ class JoystickReader(object):
     def _get_thrust_slew_rate(self):
         return self._thrust_slew_rate
 
+
     def read_input(self):
         """Read input data from the selected device"""
 ####        return ####
 ####        logger.info("Read dans input/init")
-        return #### MAP
+####        return #### MAP
         try:
             data = self._selected_mux.read()
-####            logger.info("Lecture data {}".format(data)) ####
+
+####            while data == 0 :
+####                data = self._selected_mux.read()
+####                logger.info(".")
+
             if data == 0:
+                self.j += 1
+                data = self._selected_mux.read()
+                logger.info("Lecture data {}, cas {}".format(data, self.j)) ####
                 self.input_updated.call(0, 0, 0, 0)
-                self.pause_input()
+                self.resume_input()
                 self.device_error.call("Error while running input device")
                 return
 
             if data:
+####                logger.info("Lecture data {}".format(data.roll)) ####
                 if data.toggled.assistedControl:
                     if self._assisted_control == \
                             JoystickReader.ASSISTED_CONTROL_POSHOLD or \
