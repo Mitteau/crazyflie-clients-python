@@ -199,7 +199,7 @@ class _JS():
 ####        logger.info("self _f in error {}".format(self._in_error))
         if not self._f or self._in_error :
 ####            raise Exception("Joystick device not opened")
-            return 0
+            return None
         self._read_all_events()
 
         return [self.axes, self.buttons]

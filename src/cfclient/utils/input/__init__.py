@@ -119,6 +119,8 @@ class JoystickReader(object):
         self.devs = []
         self.i = 0 ####
         self.j = 0 ####
+        self._inhibe = False
+
 
         if Config().get("flightmode") is "Normal":
             self.max_yaw_rate = Config().get("normal_max_yaw")
@@ -184,7 +186,7 @@ class JoystickReader(object):
 
         # Call with 3 bools (rp_limiting, yaw_limiting, thrust_limiting)
         self.limiting_updated = Caller()
-
+        
     def _get_device_from_name(self, device_name):
         """Get the raw device from a name"""
         for d in readers.devices():
@@ -414,7 +416,7 @@ class JoystickReader(object):
     def pause_input(self, device_name=None):
         """Stop reading from the input device."""
         self._read_timer.stop()
-        self._selected_mux.pause()
+        if self._selected_mux != None : self._selected_mux.pause()
 
     def _set_thrust_slew_rate(self, rate):
         self._thrust_slew_rate = rate
@@ -426,12 +428,15 @@ class JoystickReader(object):
     def _get_thrust_slew_rate(self):
         return self._thrust_slew_rate
 
+    def inhibe(self, b) :
+        self._inhibe = b
 
     def read_input(self):
         """Read input data from the selected device"""
 ####        return ####
-####        logger.info("Read dans input/init")
 ####        return #### MAP
+        if self._selected_mux == None or self._inhibe : return
+####        logger.info("Read dans input/init")
         try:
             data = self._selected_mux.read()
 
@@ -442,9 +447,9 @@ class JoystickReader(object):
             if data == 0:
                 self.j += 1
                 data = self._selected_mux.read()
-                logger.info("Lecture data {}, cas {}".format(data, self.j)) ####
-                self.input_updated.call(0, 0, 0, 0)
-                self.resume_input()
+####                logger.info("Lecture data {}, cas {}".format(data, self.j)) ####
+                self.input_updated.call(0, 0, 0, 0) #emergency stop
+                self.pause_input()
                 self.device_error.call("Error while running input device")
                 return
 

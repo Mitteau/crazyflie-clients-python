@@ -142,13 +142,12 @@ class InputDevice(InputReaderInterface):
 
     def read(self, include_raw=False):
 
-        self._reader.read(self.id) #### Pourquoi deux lectures ?
-        if self._reader.read(self.id) != 0 :
-            [axis, buttons] = self._reader.read(self.id)
-        else:
-            return 0
+####        self._reader.read(self.id) #### Pourquoi deux lectures ?
+        r = self._reader.read(self.id)
+####        logger.info("sself._reader.read {}".format(r))
+        if r == None : return 0
 
-        [axis, buttons] = self._reader.read(self.id)
+        [axis, buttons] = r ####self._reader.read(self.id)
 
         # To support split axis we need to zero all the axis
         self.data.reset_axes()
