@@ -194,7 +194,7 @@ class JoystickReader(object):
             if d.name == device_name:
 ####                logger.info("device name {}, id {}".format(d.name, d.id))
                 return d
-        self.device_error.call("New device driver")
+####        self.device_error.call("New device driver")
         return None
 
     def set_alt_hold_available(self, available):
@@ -202,6 +202,7 @@ class JoystickReader(object):
         self.has_pressure_sensor = available
 
     def _do_device_discovery(self):
+####        time.sleep(5)
         devs_old = []
         for d in self.devs :
             devs_old.append(d)
@@ -445,11 +446,12 @@ class JoystickReader(object):
 ####                logger.info(".")
 
             if data == 0:
-                self.j += 1
-                data = self._selected_mux.read()
+####                self.j += 1
+                self._inhibe = True
+####                data = self._selected_mux.read()
 ####                logger.info("Lecture data {}, cas {}".format(data, self.j)) ####
                 self.input_updated.call(0, 0, 0, 0) #emergency stop
-                self.pause_input()
+####                self.pause_input()
                 self.device_error.call("Error while running input device")
                 return
 
